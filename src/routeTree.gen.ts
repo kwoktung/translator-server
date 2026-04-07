@@ -9,15 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AboutRouteImport } from './routes/about'
+import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WWordRouteImport } from './routes/w.$word'
-import { Route as ApiTranslateWordRouteImport } from './routes/api.translate.word'
-import { Route as ApiTranslateSentenceRouteImport } from './routes/api.translate.sentence'
+import { Route as ApiWordRouteImport } from './routes/api.word'
+import { Route as ApiTtsRouteImport } from './routes/api.tts'
+import { Route as ApiSentenceRouteImport } from './routes/api.sentence'
+import { Route as ProtectedVocabularyRouteImport } from './routes/_protected.vocabulary'
+import { Route as ProtectedTrRouteImport } from './routes/_protected.tr'
 
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const ProtectedRoute = ProtectedRouteImport.update({
+  id: '/_protected',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -30,78 +32,108 @@ const WWordRoute = WWordRouteImport.update({
   path: '/w/$word',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTranslateWordRoute = ApiTranslateWordRouteImport.update({
-  id: '/api/translate/word',
-  path: '/api/translate/word',
+const ApiWordRoute = ApiWordRouteImport.update({
+  id: '/api/word',
+  path: '/api/word',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTranslateSentenceRoute = ApiTranslateSentenceRouteImport.update({
-  id: '/api/translate/sentence',
-  path: '/api/translate/sentence',
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSentenceRoute = ApiSentenceRouteImport.update({
+  id: '/api/sentence',
+  path: '/api/sentence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtectedVocabularyRoute = ProtectedVocabularyRouteImport.update({
+  id: '/vocabulary',
+  path: '/vocabulary',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedTrRoute = ProtectedTrRouteImport.update({
+  id: '/tr',
+  path: '/tr',
+  getParentRoute: () => ProtectedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/tr': typeof ProtectedTrRoute
+  '/vocabulary': typeof ProtectedVocabularyRoute
+  '/api/sentence': typeof ApiSentenceRoute
+  '/api/tts': typeof ApiTtsRoute
+  '/api/word': typeof ApiWordRoute
   '/w/$word': typeof WWordRoute
-  '/api/translate/sentence': typeof ApiTranslateSentenceRoute
-  '/api/translate/word': typeof ApiTranslateWordRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/tr': typeof ProtectedTrRoute
+  '/vocabulary': typeof ProtectedVocabularyRoute
+  '/api/sentence': typeof ApiSentenceRoute
+  '/api/tts': typeof ApiTtsRoute
+  '/api/word': typeof ApiWordRoute
   '/w/$word': typeof WWordRoute
-  '/api/translate/sentence': typeof ApiTranslateSentenceRoute
-  '/api/translate/word': typeof ApiTranslateWordRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/_protected': typeof ProtectedRouteWithChildren
+  '/_protected/tr': typeof ProtectedTrRoute
+  '/_protected/vocabulary': typeof ProtectedVocabularyRoute
+  '/api/sentence': typeof ApiSentenceRoute
+  '/api/tts': typeof ApiTtsRoute
+  '/api/word': typeof ApiWordRoute
   '/w/$word': typeof WWordRoute
-  '/api/translate/sentence': typeof ApiTranslateSentenceRoute
-  '/api/translate/word': typeof ApiTranslateWordRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
+    | '/tr'
+    | '/vocabulary'
+    | '/api/sentence'
+    | '/api/tts'
+    | '/api/word'
     | '/w/$word'
-    | '/api/translate/sentence'
-    | '/api/translate/word'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
+    | '/tr'
+    | '/vocabulary'
+    | '/api/sentence'
+    | '/api/tts'
+    | '/api/word'
     | '/w/$word'
-    | '/api/translate/sentence'
-    | '/api/translate/word'
   id:
     | '__root__'
     | '/'
-    | '/about'
+    | '/_protected'
+    | '/_protected/tr'
+    | '/_protected/vocabulary'
+    | '/api/sentence'
+    | '/api/tts'
+    | '/api/word'
     | '/w/$word'
-    | '/api/translate/sentence'
-    | '/api/translate/word'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
+  ProtectedRoute: typeof ProtectedRouteWithChildren
+  ApiSentenceRoute: typeof ApiSentenceRoute
+  ApiTtsRoute: typeof ApiTtsRoute
+  ApiWordRoute: typeof ApiWordRoute
   WWordRoute: typeof WWordRoute
-  ApiTranslateSentenceRoute: typeof ApiTranslateSentenceRoute
-  ApiTranslateWordRoute: typeof ApiTranslateWordRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/_protected': {
+      id: '/_protected'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -118,29 +150,65 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WWordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/translate/word': {
-      id: '/api/translate/word'
-      path: '/api/translate/word'
-      fullPath: '/api/translate/word'
-      preLoaderRoute: typeof ApiTranslateWordRouteImport
+    '/api/word': {
+      id: '/api/word'
+      path: '/api/word'
+      fullPath: '/api/word'
+      preLoaderRoute: typeof ApiWordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/translate/sentence': {
-      id: '/api/translate/sentence'
-      path: '/api/translate/sentence'
-      fullPath: '/api/translate/sentence'
-      preLoaderRoute: typeof ApiTranslateSentenceRouteImport
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/sentence': {
+      id: '/api/sentence'
+      path: '/api/sentence'
+      fullPath: '/api/sentence'
+      preLoaderRoute: typeof ApiSentenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_protected/vocabulary': {
+      id: '/_protected/vocabulary'
+      path: '/vocabulary'
+      fullPath: '/vocabulary'
+      preLoaderRoute: typeof ProtectedVocabularyRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/tr': {
+      id: '/_protected/tr'
+      path: '/tr'
+      fullPath: '/tr'
+      preLoaderRoute: typeof ProtectedTrRouteImport
+      parentRoute: typeof ProtectedRoute
     }
   }
 }
 
+interface ProtectedRouteChildren {
+  ProtectedTrRoute: typeof ProtectedTrRoute
+  ProtectedVocabularyRoute: typeof ProtectedVocabularyRoute
+}
+
+const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedTrRoute: ProtectedTrRoute,
+  ProtectedVocabularyRoute: ProtectedVocabularyRoute,
+}
+
+const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
+  ProtectedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
+  ProtectedRoute: ProtectedRouteWithChildren,
+  ApiSentenceRoute: ApiSentenceRoute,
+  ApiTtsRoute: ApiTtsRoute,
+  ApiWordRoute: ApiWordRoute,
   WWordRoute: WWordRoute,
-  ApiTranslateSentenceRoute: ApiTranslateSentenceRoute,
-  ApiTranslateWordRoute: ApiTranslateWordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
