@@ -8,5 +8,5 @@
   "files.readonlyInclude": {
     "**/routeTree.gen.ts": true
   },
-  "cSpell.words": ["treeify", "workersai"]
+  "cSpell.words": ["treeify", "VITE", "workersai"]
 }
