@@ -1,6 +1,17 @@
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
 
+export interface SessionUser {
+  id: string
+  name: string
+  email: string
+}
+
+export interface Session {
+  session: object
+  user: SessionUser
+}
+
 export const getSessionFn = createServerFn({ method: 'GET' }).handler(
   async () => {
     const request = getRequest()
@@ -17,6 +28,6 @@ export const getSessionFn = createServerFn({ method: 'GET' }).handler(
 
     const data = await response.json()
 
-    return data as Record<string, object>
+    return data as Session | null
   },
 )

@@ -8,4 +8,12 @@
     "binding": "AI",
     "remote": true,
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "translator-db",
+      "database_id": "933a0b89-3a21-4a28-bb44-4dd03019fc71",
+      "migrations_dir": "src/db/migrations",
+    },
+  ],
 }

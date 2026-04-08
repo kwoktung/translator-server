@@ -1,6 +1,8 @@
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { sentenceTranslateFn } from '#/actions/translate-sentence'
+import { wordTranslateFn } from '#/actions/translate-word'
+import { addVocabularyFn } from '#/actions/vocabulary'
 import { speakText } from '#/utils/tts'
 
 type Lang = 'en' | 'zh'
@@ -46,6 +48,7 @@ export function TranslatePage() {
   const [source, setSource] = useState<Lang>('en')
   const [target, setTarget] = useState<Lang>('zh')
   const [inputText, setInputText] = useState('')
+  const [saved, setSaved] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const {
@@ -58,6 +61,27 @@ export function TranslatePage() {
     mutationFn: ({ text, src, tgt }: { text: string; src: Lang; tgt: Lang }) =>
       sentenceTranslateFn({ data: { text, source: src, target: tgt } }),
   })
+
+  const { mutate: saveWord, isPending: isSaving } = useMutation({
+    mutationFn: async (word: string) => {
+      const wordResult = await wordTranslateFn({
+        data: { word, source: 'en', target: 'zh' },
+      })
+      return addVocabularyFn({
+        data: {
+          word: wordResult.word,
+          phonetic: wordResult.phonetic,
+          meaning: wordResult.meaning,
+          mnemonic: wordResult.mnemonic,
+          example: wordResult.example,
+        },
+      })
+    },
+    onSuccess: () => setSaved(true),
+  })
+
+  const isSingleWord =
+    source === 'en' && inputText.trim().split(/\s+/).length === 1
 
   function scheduleTranslate(text: string, src: Lang, tgt: Lang) {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -74,6 +98,7 @@ export function TranslatePage() {
 
   function handleInput(text: string) {
     setInputText(text)
+    setSaved(false)
     scheduleTranslate(text, source, target)
   }
 
@@ -156,8 +181,50 @@ export function TranslatePage() {
               rows={6}
             />
             <div className="mt-3 flex items-center justify-between">
-              {source === 'en' && <SpeakButton text={inputText} />}
-              {source !== 'en' && <span />}
+              <div className="flex items-center gap-1">
+                {source === 'en' && <SpeakButton text={inputText} />}
+                {isSingleWord && inputText.trim() && (
+                  <button
+                    onClick={() => saveWord(inputText.trim())}
+                    disabled={isSaving || saved}
+                    title={saved ? 'Saved to vocabulary' : 'Save to vocabulary'}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-(--sea-ink-soft) transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--lagoon-deep)] disabled:opacity-50"
+                  >
+                    {isSaving ? (
+                      <span className="flex gap-0.5">
+                        {[0, 1, 2].map((i) => (
+                          <span
+                            key={i}
+                            className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--lagoon)]"
+                            style={{ animationDelay: `${i * 120}ms` }}
+                          />
+                        ))}
+                      </span>
+                    ) : saved ? (
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        width="18"
+                        height="18"
+                        className="text-[var(--lagoon)]"
+                      >
+                        <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                      </svg>
+                    ) : (
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        width="18"
+                        height="18"
+                      >
+                        <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                      </svg>
+                    )}
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-(--sea-ink-soft)/60">
                   {inputText.length}/500
