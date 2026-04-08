@@ -16,6 +16,7 @@
     "check": "npm run lint && npm run format",
     "deploy": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types",
+    "secrets:bulk": "wrangler secret bulk .prod.vars",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply translator-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply translator-db --remote"

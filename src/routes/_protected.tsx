@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { getSessionFn } from '#/actions/get-session'
+import Header from '../components/header'
 
 export const Route = createFileRoute('/_protected')({
   beforeLoad: async () => {
@@ -8,5 +9,10 @@ export const Route = createFileRoute('/_protected')({
       throw redirect({ to: '/' })
     }
   },
-  component: () => <Outlet />,
+  component: () => (
+    <div>
+      <Header />
+      <Outlet />
+    </div>
+  ),
 })

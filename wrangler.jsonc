@@ -8,6 +8,8 @@
     "binding": "AI",
     "remote": true,
   },
+  "workers_dev": true,
+  "preview_urls": false,
   "d1_databases": [
     {
       "binding": "DB",

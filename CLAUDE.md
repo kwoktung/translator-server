@@ -1,3 +1,7 @@
+# File Naming
+
+Use kebab-case for all file names (e.g. `theme-script.tsx`, not `ThemeScript.tsx`).
+
 # Generated Files
 
 ## worker-configuration.d.ts
