@@ -22,16 +22,18 @@ export type WordTranslateInput = z.infer<typeof wordTranslateInputSchema>
 export interface WordTranslateResult {
   word: string
   phonetic: string
-  scene: string
+  mnemonic: string
   example: string
   meaning: string
 }
 
 const wordResultSchema = z.object({
   phonetic: z.string().describe('IPA pronunciation, e.g. /ˈmesi/'),
-  scene: z
+  mnemonic: z
     .string()
-    .describe('A short vivid scene description in the target language'),
+    .describe(
+      'A short mnemonic or memory technique to help remember the word, in the source language',
+    ),
   example: z
     .string()
     .describe('A natural example sentence in the source language'),

@@ -6,7 +6,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "vite dev --port 5173",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
@@ -15,11 +15,15 @@
     "fix": "prettier --write . && eslint --fix",
     "check": "npm run lint && npm run format",
     "deploy": "npm run build && wrangler deploy",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply translator-db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply translator-db --remote"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
+    "@tanstack/react-query": "latest",
     "@tanstack/react-router": "latest",
     "@tanstack/react-router-devtools": "latest",
     "@tanstack/react-router-ssr-query": "latest",
@@ -27,6 +31,7 @@
     "@tanstack/router-plugin": "^1.132.0",
     "ai": "^6.0.149",
     "better-auth": "^1.6.0",
+    "drizzle-orm": "^0.45.2",
     "lucide-react": "^0.545.0",
     "mustache": "^4.2.0",
     "react": "^19.2.0",
@@ -47,6 +52,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.1.4",
+    "drizzle-kit": "^0.31.10",
     "jsdom": "^28.1.0",
     "prettier": "^3.8.1",
     "typescript": "^5.7.2",
