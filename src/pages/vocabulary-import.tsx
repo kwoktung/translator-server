@@ -12,7 +12,8 @@ interface WordItem {
 
 type Phase = 'input' | 'processing' | 'complete'
 
-const MAX_WORDS = 50
+const MAX_WORDS = 200
+const WINDOW_SIZE = 10
 
 function parseWords(raw: string): string[] {
   const seen = new Set<string>()
@@ -49,38 +50,74 @@ export function VocabularyImportPage() {
     if (phase !== 'processing' || processingRef.current) return
     processingRef.current = true
 
-    async function run() {
-      const words = items.map((i) => i.word)
-      for (let idx = 0; idx < words.length; idx++) {
-        const word = words[idx]
+    async function processOne(word: string, idx: number) {
+      setItems((prev) =>
+        prev.map((item, i) =>
+          i === idx ? { ...item, status: 'processing' } : item,
+        ),
+      )
+      try {
+        const result = await addVocabularyFn({ data: { word } })
         setItems((prev) =>
           prev.map((item, i) =>
-            i === idx ? { ...item, status: 'processing' } : item,
+            i === idx
+              ? { ...item, status: result.inserted ? 'done' : 'skipped' }
+              : item,
           ),
         )
-        try {
-          const result = await addVocabularyFn({ data: { word } })
-          setItems((prev) =>
-            prev.map((item, i) =>
-              i === idx
-                ? { ...item, status: result.inserted ? 'done' : 'skipped' }
-                : item,
-            ),
-          )
-        } catch {
-          setItems((prev) =>
-            prev.map((item, i) =>
-              i === idx ? { ...item, status: 'error' } : item,
-            ),
-          )
-        }
+      } catch {
+        setItems((prev) =>
+          prev.map((item, i) =>
+            i === idx ? { ...item, status: 'error' } : item,
+          ),
+        )
       }
+    }
+
+    async function run() {
+      const queue = items.map((item, idx) => ({ word: item.word, idx }))
+
+      const workers = Array.from({ length: WINDOW_SIZE }, async () => {
+        while (queue.length > 0) {
+          const entry = queue.shift()
+          if (!entry) break
+          await processOne(entry.word, entry.idx)
+        }
+      })
+
+      await Promise.all(workers)
       setPhase('complete')
       queryClient.invalidateQueries({ queryKey: ['vocabulary'] })
     }
 
     void run()
   }, [phase])
+
+  async function retryWord(idx: number) {
+    const word = items[idx].word
+    setItems((prev) =>
+      prev.map((item, i) =>
+        i === idx ? { ...item, status: 'processing' } : item,
+      ),
+    )
+    try {
+      const result = await addVocabularyFn({ data: { word } })
+      setItems((prev) =>
+        prev.map((item, i) =>
+          i === idx
+            ? { ...item, status: result.inserted ? 'done' : 'skipped' }
+            : item,
+        ),
+      )
+    } catch {
+      setItems((prev) =>
+        prev.map((item, i) =>
+          i === idx ? { ...item, status: 'error' } : item,
+        ),
+      )
+    }
+    queryClient.invalidateQueries({ queryKey: ['vocabulary'] })
+  }
 
   const doneCount = items.filter((i) => i.status === 'done').length
   const skippedCount = items.filter((i) => i.status === 'skipped').length
@@ -169,13 +206,20 @@ export function VocabularyImportPage() {
           )}
 
           <ul className="divide-y divide-(--line)">
-            {items.map((item) => (
+            {items.map((item, idx) => (
               <li
                 key={item.word}
                 className="flex items-center justify-between gap-3 py-2.5"
               >
                 <span className="text-sm text-(--sea-ink)">{item.word}</span>
-                <StatusChip status={item.status} />
+                <StatusChip
+                  status={item.status}
+                  onRetry={
+                    phase === 'complete' && item.status === 'error'
+                      ? () => retryWord(idx)
+                      : undefined
+                  }
+                />
               </li>
             ))}
           </ul>
@@ -196,7 +240,13 @@ export function VocabularyImportPage() {
   )
 }
 
-function StatusChip({ status }: { status: WordStatus }) {
+function StatusChip({
+  status,
+  onRetry,
+}: {
+  status: WordStatus
+  onRetry?: () => void
+}) {
   if (status === 'pending') {
     return <span className="h-2 w-2 rounded-full bg-(--line)" />
   }
@@ -226,5 +276,17 @@ function StatusChip({ status }: { status: WordStatus }) {
   if (status === 'skipped') {
     return <span className="text-xs text-(--sea-ink-soft)">already exists</span>
   }
-  return <span className="text-xs text-red-500">failed</span>
+  return (
+    <span className="flex items-center gap-2">
+      <span className="text-xs text-red-500">failed</span>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="text-xs font-medium text-(--lagoon) hover:underline"
+        >
+          retry
+        </button>
+      )}
+    </span>
+  )
 }

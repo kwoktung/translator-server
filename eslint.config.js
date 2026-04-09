@@ -15,6 +15,11 @@ export default [
     },
   },
   {
-    ignores: ['eslint.config.js', 'prettier.config.js', '.wrangler'],
+    ignores: [
+      'eslint.config.js',
+      'prettier.config.js',
+      '.wrangler',
+      'src/components/theme-script/theme-init.js',
+    ],
   },
 ]

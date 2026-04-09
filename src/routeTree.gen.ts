@@ -15,7 +15,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WWordRouteImport } from './routes/w.$word'
 import { Route as ApiWritingCoachRouteImport } from './routes/api.writing-coach'
 import { Route as ApiWordRouteImport } from './routes/api.word'
-import { Route as ApiTtsRouteImport } from './routes/api.tts'
 import { Route as ApiSentenceRouteImport } from './routes/api.sentence'
 import { Route as ProtectedWritingCoachRouteImport } from './routes/_protected.writing-coach'
 import { Route as ProtectedVocabularyRouteImport } from './routes/_protected.vocabulary'
@@ -23,6 +22,7 @@ import { Route as ProtectedTrRouteImport } from './routes/_protected.tr'
 import { Route as ProtectedApiKeysRouteImport } from './routes/_protected.api-keys'
 import { Route as ImmersiveWarmupRouteImport } from './routes/_immersive.warmup'
 import { Route as ProtectedVocabularyIndexRouteImport } from './routes/_protected.vocabulary.index'
+import { Route as AudioWWordRouteImport } from './routes/audio.w.$word'
 import { Route as ProtectedVocabularyImportRouteImport } from './routes/_protected.vocabulary.import'
 
 const ProtectedRoute = ProtectedRouteImport.update({
@@ -51,11 +51,6 @@ const ApiWritingCoachRoute = ApiWritingCoachRouteImport.update({
 const ApiWordRoute = ApiWordRouteImport.update({
   id: '/api/word',
   path: '/api/word',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiTtsRoute = ApiTtsRouteImport.update({
-  id: '/api/tts',
-  path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSentenceRoute = ApiSentenceRouteImport.update({
@@ -94,6 +89,11 @@ const ProtectedVocabularyIndexRoute =
     path: '/',
     getParentRoute: () => ProtectedVocabularyRoute,
   } as any)
+const AudioWWordRoute = AudioWWordRouteImport.update({
+  id: '/audio/w/$word',
+  path: '/audio/w/$word',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProtectedVocabularyImportRoute =
   ProtectedVocabularyImportRouteImport.update({
     id: '/import',
@@ -109,11 +109,11 @@ export interface FileRoutesByFullPath {
   '/vocabulary': typeof ProtectedVocabularyRouteWithChildren
   '/writing-coach': typeof ProtectedWritingCoachRoute
   '/api/sentence': typeof ApiSentenceRoute
-  '/api/tts': typeof ApiTtsRoute
   '/api/word': typeof ApiWordRoute
   '/api/writing-coach': typeof ApiWritingCoachRoute
   '/w/$word': typeof WWordRoute
   '/vocabulary/import': typeof ProtectedVocabularyImportRoute
+  '/audio/w/$word': typeof AudioWWordRoute
   '/vocabulary/': typeof ProtectedVocabularyIndexRoute
 }
 export interface FileRoutesByTo {
@@ -123,11 +123,11 @@ export interface FileRoutesByTo {
   '/tr': typeof ProtectedTrRoute
   '/writing-coach': typeof ProtectedWritingCoachRoute
   '/api/sentence': typeof ApiSentenceRoute
-  '/api/tts': typeof ApiTtsRoute
   '/api/word': typeof ApiWordRoute
   '/api/writing-coach': typeof ApiWritingCoachRoute
   '/w/$word': typeof WWordRoute
   '/vocabulary/import': typeof ProtectedVocabularyImportRoute
+  '/audio/w/$word': typeof AudioWWordRoute
   '/vocabulary': typeof ProtectedVocabularyIndexRoute
 }
 export interface FileRoutesById {
@@ -141,11 +141,11 @@ export interface FileRoutesById {
   '/_protected/vocabulary': typeof ProtectedVocabularyRouteWithChildren
   '/_protected/writing-coach': typeof ProtectedWritingCoachRoute
   '/api/sentence': typeof ApiSentenceRoute
-  '/api/tts': typeof ApiTtsRoute
   '/api/word': typeof ApiWordRoute
   '/api/writing-coach': typeof ApiWritingCoachRoute
   '/w/$word': typeof WWordRoute
   '/_protected/vocabulary/import': typeof ProtectedVocabularyImportRoute
+  '/audio/w/$word': typeof AudioWWordRoute
   '/_protected/vocabulary/': typeof ProtectedVocabularyIndexRoute
 }
 export interface FileRouteTypes {
@@ -158,11 +158,11 @@ export interface FileRouteTypes {
     | '/vocabulary'
     | '/writing-coach'
     | '/api/sentence'
-    | '/api/tts'
     | '/api/word'
     | '/api/writing-coach'
     | '/w/$word'
     | '/vocabulary/import'
+    | '/audio/w/$word'
     | '/vocabulary/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -172,11 +172,11 @@ export interface FileRouteTypes {
     | '/tr'
     | '/writing-coach'
     | '/api/sentence'
-    | '/api/tts'
     | '/api/word'
     | '/api/writing-coach'
     | '/w/$word'
     | '/vocabulary/import'
+    | '/audio/w/$word'
     | '/vocabulary'
   id:
     | '__root__'
@@ -189,11 +189,11 @@ export interface FileRouteTypes {
     | '/_protected/vocabulary'
     | '/_protected/writing-coach'
     | '/api/sentence'
-    | '/api/tts'
     | '/api/word'
     | '/api/writing-coach'
     | '/w/$word'
     | '/_protected/vocabulary/import'
+    | '/audio/w/$word'
     | '/_protected/vocabulary/'
   fileRoutesById: FileRoutesById
 }
@@ -202,10 +202,10 @@ export interface RootRouteChildren {
   ImmersiveRoute: typeof ImmersiveRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   ApiSentenceRoute: typeof ApiSentenceRoute
-  ApiTtsRoute: typeof ApiTtsRoute
   ApiWordRoute: typeof ApiWordRoute
   ApiWritingCoachRoute: typeof ApiWritingCoachRoute
   WWordRoute: typeof WWordRoute
+  AudioWWordRoute: typeof AudioWWordRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -250,13 +250,6 @@ declare module '@tanstack/react-router' {
       path: '/api/word'
       fullPath: '/api/word'
       preLoaderRoute: typeof ApiWordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/tts': {
-      id: '/api/tts'
-      path: '/api/tts'
-      fullPath: '/api/tts'
-      preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/sentence': {
@@ -307,6 +300,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/vocabulary/'
       preLoaderRoute: typeof ProtectedVocabularyIndexRouteImport
       parentRoute: typeof ProtectedVocabularyRoute
+    }
+    '/audio/w/$word': {
+      id: '/audio/w/$word'
+      path: '/audio/w/$word'
+      fullPath: '/audio/w/$word'
+      preLoaderRoute: typeof AudioWWordRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_protected/vocabulary/import': {
       id: '/_protected/vocabulary/import'
@@ -366,10 +366,10 @@ const rootRouteChildren: RootRouteChildren = {
   ImmersiveRoute: ImmersiveRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   ApiSentenceRoute: ApiSentenceRoute,
-  ApiTtsRoute: ApiTtsRoute,
   ApiWordRoute: ApiWordRoute,
   ApiWritingCoachRoute: ApiWritingCoachRoute,
   WWordRoute: WWordRoute,
+  AudioWWordRoute: AudioWWordRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

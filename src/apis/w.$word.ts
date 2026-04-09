@@ -1,10 +1,10 @@
 import { wordTranslateFn } from '#/actions/translate/word'
+import { isEnglishWord } from '#/utils/patterns'
 
 export const handlers = {
   GET: async ({ params }: { params: { word: string } }) => {
     const { word } = params
-    const ENGLISH_WORD_PATTERN = /^[a-zA-Z]+(-[a-zA-Z]+)*$/
-    if (!ENGLISH_WORD_PATTERN.test(word)) {
+    if (!isEnglishWord(word)) {
       return Response.json(
         { error: `"${word}" is not a valid English word` },
         { status: 400 },
