@@ -5,15 +5,9 @@ import { z } from 'zod'
 import { getDb } from '#/db'
 import { getEnv } from '#/env.server'
 import { writingTurns } from '#/db/schema'
-import { getSessionFn } from '#/actions/get-session'
 import { getWritingFeedback } from '#/utils/llm/writing-coach'
-
-async function requireUserId(): Promise<string> {
-  const session = await getSessionFn()
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (!session?.user?.id) throw new Error('Unauthorized')
-  return session.user.id
-}
+import { serverFnErrorMiddleware } from '#/middlewares/server-fn-error'
+import { requireUserId } from '#/utils/require-user-id'
 
 export interface WritingFeedback {
   id: number
@@ -31,6 +25,7 @@ export const getWritingFeedbackFn = createServerFn<
   .inputValidator((data) =>
     z.object({ text: z.string().min(1).max(2000) }).parse(data),
   )
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const env = getEnv()
@@ -61,6 +56,7 @@ export const deleteWritingTurnFn = createServerFn<'POST', { id: number }, void>(
   { method: 'POST' },
 )
   .inputValidator((data) => z.object({ id: z.number().int() }).parse(data))
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
@@ -69,8 +65,9 @@ export const deleteWritingTurnFn = createServerFn<'POST', { id: number }, void>(
       .where(and(eq(writingTurns.id, data.id), eq(writingTurns.userId, userId)))
   })
 
-export const listWritingTurnsFn = createServerFn({ method: 'GET' }).handler(
-  async () => {
+export const listWritingTurnsFn = createServerFn({ method: 'GET' })
+  .middleware([serverFnErrorMiddleware])
+  .handler(async () => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
 
@@ -85,5 +82,4 @@ export const listWritingTurnsFn = createServerFn({ method: 'GET' }).handler(
       ...row,
       suggestions: JSON.parse(row.suggestions) as string[],
     }))
-  },
-)
+  })

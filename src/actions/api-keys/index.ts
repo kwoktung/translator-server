@@ -4,14 +4,8 @@ import { z } from 'zod'
 import { getDb } from '#/db'
 import { getEnv } from '#/env.server'
 import { apiKeys } from '#/db/schema'
-import { getSessionFn } from '#/actions/get-session'
-
-async function requireUserId(): Promise<string> {
-  const session = await getSessionFn()
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (!session?.user?.id) throw new Error('Unauthorized')
-  return session.user.id
-}
+import { serverFnErrorMiddleware } from '#/middlewares/server-fn-error'
+import { requireUserId } from '#/utils/require-user-id'
 
 function generateApiKey(): string {
   return 'wc_' + crypto.randomUUID().replace(/-/g, '')
@@ -32,6 +26,7 @@ export const createApiKeyFn = createServerFn<
   .inputValidator((data) =>
     z.object({ name: z.string().min(1).max(100) }).parse(data),
   )
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
@@ -44,8 +39,9 @@ export const createApiKeyFn = createServerFn<
     return { id: row.id, name: data.name, key, createdAt }
   })
 
-export const listApiKeysFn = createServerFn({ method: 'GET' }).handler(
-  async () => {
+export const listApiKeysFn = createServerFn({ method: 'GET' })
+  .middleware([serverFnErrorMiddleware])
+  .handler(async () => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
     return db
@@ -58,13 +54,13 @@ export const listApiKeysFn = createServerFn({ method: 'GET' }).handler(
       .from(apiKeys)
       .where(eq(apiKeys.userId, userId))
       .orderBy(desc(apiKeys.createdAt))
-  },
-)
+  })
 
 export const deleteApiKeyFn = createServerFn<'POST', { id: number }, void>({
   method: 'POST',
 })
   .inputValidator((data) => z.object({ id: z.number().int() }).parse(data))
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb(getEnv())

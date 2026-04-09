@@ -7,6 +7,7 @@ import { getMeaning } from '#/utils/llm/meaning'
 import { getMnemonic } from '#/utils/llm/mnemonic'
 import { getPhonetic } from '#/utils/llm/phonetic'
 import { LANG_MAP } from '#/actions/translate/common'
+import { serverFnErrorMiddleware } from '#/middlewares/server-fn-error'
 
 export const wordTranslateInputSchema = z
   .object({
@@ -35,6 +36,7 @@ export const wordTranslateFn = createServerFn<
   WordTranslateResult
 >({ method: 'POST' })
   .inputValidator((data) => wordTranslateInputSchema.parse(data))
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const env = getEnv()
     const workersai = createWorkersAI({ binding: env.AI })

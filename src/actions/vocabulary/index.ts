@@ -4,18 +4,13 @@ import { z } from 'zod'
 import { getDb } from '#/db'
 import { getEnv } from '#/env.server'
 import { vocabulary } from '../../db/schema'
-import { getSessionFn } from '#/actions/get-session'
 import { wordTranslateFn } from '#/actions/translate/word'
+import { serverFnErrorMiddleware } from '#/middlewares/server-fn-error'
+import { requireUserId } from '#/utils/require-user-id'
 
-async function requireUserId(): Promise<string> {
-  const session = await getSessionFn()
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (!session?.user?.id) throw new Error('Unauthorized')
-  return session.user.id
-}
-
-export const listVocabularyFn = createServerFn({ method: 'GET' }).handler(
-  async () => {
+export const listVocabularyFn = createServerFn({ method: 'GET' })
+  .middleware([serverFnErrorMiddleware])
+  .handler(async () => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
     return db
@@ -23,11 +18,11 @@ export const listVocabularyFn = createServerFn({ method: 'GET' }).handler(
       .from(vocabulary)
       .where(eq(vocabulary.userId, userId))
       .orderBy(vocabulary.createdAt)
-  },
-)
+  })
 
 export const addVocabularyFn = createServerFn({ method: 'POST' })
   .inputValidator((data) => z.object({ word: z.string().min(1) }).parse(data))
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
@@ -64,6 +59,7 @@ export const addVocabularyFn = createServerFn({ method: 'POST' })
 
 export const removeVocabularyFn = createServerFn({ method: 'POST' })
   .inputValidator((data) => z.object({ id: z.number().int() }).parse(data))
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb(getEnv())

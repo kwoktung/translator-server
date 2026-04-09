@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { getEnv } from '#/env.server'
 import { translateText } from '#/utils/llm/translate'
 import { LANG_MAP } from '#/actions/translate/common'
+import { serverFnErrorMiddleware } from '#/middlewares/server-fn-error'
 
 export const sentenceTranslateInputSchema = z
   .object({
@@ -30,6 +31,7 @@ export const sentenceTranslateFn = createServerFn<
   SentenceTranslateResult
 >({ method: 'POST' })
   .inputValidator((data) => sentenceTranslateInputSchema.parse(data))
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const env = getEnv()
     const workersai = createWorkersAI({ binding: env.AI })
