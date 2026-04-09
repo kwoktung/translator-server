@@ -1,15 +1,9 @@
 import { createServerFn } from '@tanstack/react-start'
-import { generateText, Output } from 'ai'
-import Mustache from 'mustache'
 import { createWorkersAI } from 'workers-ai-provider'
 import { z } from 'zod'
 import { getEnv } from '#/env.server'
-import promptTemplate from './prompt.mustache?raw'
-
-const LANG_MAP: Record<string, string> = {
-  zh: 'Chinese',
-  en: 'English',
-}
+import { translateText } from '#/utils/llm/translate'
+import { LANG_MAP } from '#/actions/translate/common'
 
 export const sentenceTranslateInputSchema = z
   .object({
@@ -30,12 +24,6 @@ export interface SentenceTranslateResult {
   translatedText: string
 }
 
-const sentenceResultSchema = z.object({
-  translatedText: z
-    .string()
-    .describe('The translated text in the target language'),
-})
-
 export const sentenceTranslateFn = createServerFn<
   'POST',
   SentenceTranslateInput,
@@ -45,18 +33,13 @@ export const sentenceTranslateFn = createServerFn<
   .handler(async ({ data }) => {
     const env = getEnv()
     const workersai = createWorkersAI({ binding: env.AI })
+    const model = workersai('@cf/meta/llama-3.1-8b-instruct')
 
-    const prompt = Mustache.render(promptTemplate, {
+    const translatedText = await translateText(model, {
       text: data.text,
       sourceLang: LANG_MAP[data.source],
       targetLang: LANG_MAP[data.target],
     })
 
-    const { output } = await generateText({
-      model: workersai('@cf/meta/llama-3.1-8b-instruct'),
-      output: Output.object({ schema: sentenceResultSchema }),
-      prompt,
-    })
-
-    return output
+    return { translatedText }
   })

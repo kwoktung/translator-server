@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { sentenceTranslateFn } from '#/actions/translate-sentence'
-import { wordTranslateFn } from '#/actions/translate-word'
+import { sentenceTranslateFn } from '#/actions/translate/sentence'
+import { wordTranslateFn } from '#/actions/translate/word'
 import { addVocabularyFn } from '#/actions/vocabulary'
 import { speakText } from '#/utils/tts'
 

@@ -1,4 +1,4 @@
-import { wordTranslateFn } from '#/actions/translate-word'
+import { wordTranslateFn } from '#/actions/translate/word'
 
 export const handlers = {
   GET: async ({ params }: { params: { word: string } }) => {
