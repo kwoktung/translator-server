@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { VocabularyPage } from '#/pages/vocabulary'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_protected/vocabulary')({
-  component: VocabularyPage,
+  component: () => <Outlet />,
 })

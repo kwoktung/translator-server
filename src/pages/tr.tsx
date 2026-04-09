@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { sentenceTranslateFn } from '#/actions/translate/sentence'
-import { wordTranslateFn } from '#/actions/translate/word'
 import { addVocabularyFn } from '#/actions/vocabulary'
 import { speakText } from '#/utils/tts'
 
@@ -63,20 +62,7 @@ export function TranslatePage() {
   })
 
   const { mutate: saveWord, isPending: isSaving } = useMutation({
-    mutationFn: async (word: string) => {
-      const wordResult = await wordTranslateFn({
-        data: { word, source: 'en', target: 'zh' },
-      })
-      return addVocabularyFn({
-        data: {
-          word: wordResult.word,
-          phonetic: wordResult.phonetic,
-          meaning: wordResult.meaning,
-          mnemonic: wordResult.mnemonic,
-          example: wordResult.example,
-        },
-      })
-    },
+    mutationFn: (word: string) => addVocabularyFn({ data: { word } }),
     onSuccess: () => setSaved(true),
   })
 
@@ -148,7 +134,6 @@ export function TranslatePage() {
         <div className="flex items-center gap-1 border-b border-(--line) px-3 py-2.5 sm:gap-2 sm:px-4 sm:py-3">
           <LangTabs
             value={source}
-            other={target}
             onChange={(l) => handleLangChange('source', l)}
           />
 
@@ -164,7 +149,6 @@ export function TranslatePage() {
 
           <LangTabs
             value={target}
-            other={source}
             onChange={(l) => handleLangChange('target', l)}
           />
         </div>
@@ -290,11 +274,9 @@ export function TranslatePage() {
 
 function LangTabs({
   value,
-  other,
   onChange,
 }: {
   value: Lang
-  other: Lang
   onChange: (l: Lang) => void
 }) {
   const langs: Lang[] = ['en', 'zh']

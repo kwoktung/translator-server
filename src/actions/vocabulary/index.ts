@@ -4,17 +4,13 @@ import { z } from 'zod'
 import { getDb } from '#/db'
 import { getEnv } from '#/env.server'
 import { vocabulary } from '../../db/schema'
-import { getSessionFn } from '#/actions/get-session'
+import { wordTranslateFn } from '#/actions/translate/word'
+import { serverFnErrorMiddleware } from '#/middlewares/server-fn-error'
+import { requireUserId } from '#/utils/require-user-id'
 
-async function requireUserId(): Promise<string> {
-  const session = await getSessionFn()
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  if (!session?.user?.id) throw new Error('Unauthorized')
-  return session.user.id
-}
-
-export const listVocabularyFn = createServerFn({ method: 'GET' }).handler(
-  async () => {
+export const listVocabularyFn = createServerFn({ method: 'GET' })
+  .middleware([serverFnErrorMiddleware])
+  .handler(async () => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
     return db
@@ -22,45 +18,48 @@ export const listVocabularyFn = createServerFn({ method: 'GET' }).handler(
       .from(vocabulary)
       .where(eq(vocabulary.userId, userId))
       .orderBy(vocabulary.createdAt)
-  },
-)
-
-const addVocabularyInput = z.object({
-  word: z.string().min(1),
-  phonetic: z.string().optional(),
-  meaning: z.string().optional(),
-  mnemonic: z.string().optional(),
-  example: z.string().optional(),
-})
-
-export type AddVocabularyInput = z.infer<typeof addVocabularyInput>
+  })
 
 export const addVocabularyFn = createServerFn({ method: 'POST' })
-  .inputValidator((data) => addVocabularyInput.parse(data))
+  .inputValidator((data) => z.object({ word: z.string().min(1) }).parse(data))
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
-    const id = crypto.randomUUID()
 
-    await db
+    const existing = await db
+      .select({ id: vocabulary.id })
+      .from(vocabulary)
+      .where(and(eq(vocabulary.userId, userId), eq(vocabulary.word, data.word)))
+      .limit(1)
+
+    if (existing.length > 0) {
+      return { id: existing[0].id, word: data.word, inserted: false }
+    }
+
+    const enriched = await wordTranslateFn({
+      data: { word: data.word, source: 'en', target: 'zh' },
+    })
+
+    const [row] = await db
       .insert(vocabulary)
       .values({
-        id,
         userId,
         word: data.word,
-        phonetic: data.phonetic ?? null,
-        meaning: data.meaning ?? null,
-        mnemonic: data.mnemonic ?? null,
-        example: data.example ?? null,
+        phonetic: enriched.phonetic,
+        meaning: enriched.meaning,
+        mnemonic: enriched.mnemonic,
+        example: enriched.example,
         createdAt: Date.now(),
       })
-      .onConflictDoNothing()
+      .returning({ id: vocabulary.id })
 
-    return { id, word: data.word }
+    return { id: row.id, word: data.word, inserted: true }
   })
 
 export const removeVocabularyFn = createServerFn({ method: 'POST' })
-  .inputValidator((data) => z.object({ id: z.string().min(1) }).parse(data))
+  .inputValidator((data) => z.object({ id: z.number().int() }).parse(data))
+  .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb(getEnv())

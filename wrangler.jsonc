@@ -14,7 +14,7 @@
     {
       "binding": "DB",
       "database_name": "translator-db",
-      "database_id": "933a0b89-3a21-4a28-bb44-4dd03019fc71",
+      "database_id": "42496a7a-2eaa-48d5-b1e2-cf7a4492730a",
       "migrations_dir": "src/db/migrations",
     },
   ],

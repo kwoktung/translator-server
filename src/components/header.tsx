@@ -18,6 +18,18 @@ export default function Header() {
           >
             Vocabulary
           </Link>
+          <Link
+            to="/writing-coach"
+            className="hidden sm:block text-sm font-medium text-(--sea-ink-soft) hover:text-(--sea-ink) transition-colors"
+          >
+            Coach
+          </Link>
+          <Link
+            to="/api-keys"
+            className="hidden sm:block text-sm font-medium text-(--sea-ink-soft) hover:text-(--sea-ink) transition-colors"
+          >
+            API Keys
+          </Link>
           <ThemeToggle />
         </div>
       </nav>

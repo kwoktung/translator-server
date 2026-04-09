@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { listVocabularyFn, removeVocabularyFn } from '#/actions/vocabulary'
 import { speakText } from '#/utils/tts'
 import type { VocabularyEntry } from '../db/schema'
@@ -13,7 +14,7 @@ export function VocabularyPage() {
   })
 
   const { mutate: removeWord } = useMutation({
-    mutationFn: (id: string) => removeVocabularyFn({ data: { id } }),
+    mutationFn: (id: number) => removeVocabularyFn({ data: { id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vocabulary'] })
     },
@@ -26,7 +27,7 @@ export function VocabularyPage() {
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className="h-2 w-2 animate-bounce rounded-full bg-[var(--lagoon)]"
+              className="h-2 w-2 animate-bounce rounded-full bg-(--lagoon)"
               style={{ animationDelay: `${i * 120}ms` }}
             />
           ))}
@@ -38,18 +39,42 @@ export function VocabularyPage() {
   if (words.length === 0) {
     return (
       <main className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
-        <p className="text-(--sea-ink-soft)">
-          No words saved yet. Translate a word and save it here.
-        </p>
+        <div className="text-center">
+          <p className="text-(--sea-ink-soft)">
+            No words saved yet. Translate a word and save it here.
+          </p>
+          <Link
+            to="/vocabulary/import"
+            className="mt-3 inline-block text-sm font-semibold text-(--lagoon) hover:underline"
+          >
+            Or import a word list →
+          </Link>
+        </div>
       </main>
     )
   }
 
   return (
     <main className="page-wrap px-4 py-6">
-      <h1 className="display-title mb-6 text-3xl font-bold text-(--sea-ink) sm:text-4xl">
-        Vocabulary
-      </h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="display-title text-3xl font-bold text-(--sea-ink) sm:text-4xl">
+          Vocabulary
+        </h1>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/vocabulary/import"
+            className="hidden sm:block island-shell rounded-xl px-4 py-2 text-sm font-semibold text-(--sea-ink)"
+          >
+            Import
+          </Link>
+          <Link
+            to="/warmup"
+            className="island-shell rounded-xl px-4 py-2 text-sm font-semibold text-(--sea-ink)"
+          >
+            Warm up
+          </Link>
+        </div>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {words.map((entry) => (
           <WordCard key={entry.id} entry={entry} onRemove={removeWord} />
@@ -64,9 +89,10 @@ function WordCard({
   onRemove,
 }: {
   entry: VocabularyEntry
-  onRemove: (id: string) => void
+  onRemove: (id: number) => void
 }) {
   const [expanded, setExpanded] = useState(false)
+  const dialogRef = useRef<HTMLDialogElement>(null)
 
   return (
     <div className="island-shell rounded-2xl p-4">
@@ -97,7 +123,7 @@ function WordCard({
           )}
         </div>
         <button
-          onClick={() => onRemove(entry.id)}
+          onClick={() => dialogRef.current?.showModal()}
           title="Remove"
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-(--sea-ink-soft) transition hover:bg-red-100 hover:text-red-500"
         >
@@ -132,6 +158,37 @@ function WordCard({
           )}
         </div>
       )}
+
+      <dialog
+        ref={dialogRef}
+        className="island-shell m-auto w-[calc(100%-2rem)] max-w-sm rounded-2xl p-6 outline-none backdrop:bg-black/30 backdrop:backdrop-blur-sm"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) dialogRef.current?.close()
+        }}
+      >
+        <h3 className="font-bold text-(--sea-ink)">Remove word?</h3>
+        <p className="mt-1 text-sm text-(--sea-ink-soft)">
+          <strong className="text-(--sea-ink)">{entry.word}</strong> will be
+          removed from your vocabulary.
+        </p>
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={() => dialogRef.current?.close()}
+            className="rounded-xl px-4 py-2 text-sm text-(--sea-ink-soft) transition hover:bg-[var(--line)]"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onRemove(entry.id)
+              dialogRef.current?.close()
+            }}
+            className="rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
+          >
+            Remove
+          </button>
+        </div>
+      </dialog>
     </div>
   )
 }

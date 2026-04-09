@@ -1,12 +1,12 @@
 import { generateText } from 'ai'
 import Mustache from 'mustache'
-import promptTemplate from './mnemonic.mustache?raw'
+import promptTemplate from './prompt.mustache?raw'
 
 type Model = Parameters<typeof generateText>[0]['model']
 
-export async function getMnemonic(
+export async function getPhonetic(
   model: Model,
-  params: { word: string; sourceLang: string },
+  params: { word: string },
 ): Promise<string> {
   const prompt = Mustache.render(promptTemplate, params)
   const { text } = await generateText({ model, prompt })
