@@ -10,7 +10,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "eslint",
+    "lint": "eslint && tsc -b",
     "format": "prettier --check .",
     "fix": "prettier --write . && eslint --fix",
     "check": "npm run lint && npm run format",

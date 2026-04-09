@@ -14,7 +14,7 @@ export function VocabularyPage() {
   })
 
   const { mutate: removeWord } = useMutation({
-    mutationFn: (id: string) => removeVocabularyFn({ data: { id } }),
+    mutationFn: (id: number) => removeVocabularyFn({ data: { id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vocabulary'] })
     },
@@ -89,7 +89,7 @@ function WordCard({
   onRemove,
 }: {
   entry: VocabularyEntry
-  onRemove: (id: string) => void
+  onRemove: (id: number) => void
 }) {
   const [expanded, setExpanded] = useState(false)
   const dialogRef = useRef<HTMLDialogElement>(null)

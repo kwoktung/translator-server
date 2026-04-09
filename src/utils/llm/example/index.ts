@@ -1,6 +1,6 @@
 import { generateText } from 'ai'
 import Mustache from 'mustache'
-import promptTemplate from './example.mustache?raw'
+import promptTemplate from './prompt.mustache?raw'
 
 type Model = Parameters<typeof generateText>[0]['model']
 

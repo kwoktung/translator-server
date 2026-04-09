@@ -134,7 +134,6 @@ export function TranslatePage() {
         <div className="flex items-center gap-1 border-b border-(--line) px-3 py-2.5 sm:gap-2 sm:px-4 sm:py-3">
           <LangTabs
             value={source}
-            other={target}
             onChange={(l) => handleLangChange('source', l)}
           />
 
@@ -150,7 +149,6 @@ export function TranslatePage() {
 
           <LangTabs
             value={target}
-            other={source}
             onChange={(l) => handleLangChange('target', l)}
           />
         </div>
@@ -276,11 +274,9 @@ export function TranslatePage() {
 
 function LangTabs({
   value,
-  other,
   onChange,
 }: {
   value: Lang
-  other: Lang
   onChange: (l: Lang) => void
 }) {
   const langs: Lang[] = ['en', 'zh']

@@ -46,23 +46,24 @@ export const addVocabularyFn = createServerFn({ method: 'POST' })
       data: { word: data.word, source: 'en', target: 'zh' },
     })
 
-    const id = crypto.randomUUID()
-    await db.insert(vocabulary).values({
-      id,
-      userId,
-      word: data.word,
-      phonetic: enriched.phonetic,
-      meaning: enriched.meaning,
-      mnemonic: enriched.mnemonic,
-      example: enriched.example,
-      createdAt: Date.now(),
-    })
+    const [row] = await db
+      .insert(vocabulary)
+      .values({
+        userId,
+        word: data.word,
+        phonetic: enriched.phonetic,
+        meaning: enriched.meaning,
+        mnemonic: enriched.mnemonic,
+        example: enriched.example,
+        createdAt: Date.now(),
+      })
+      .returning({ id: vocabulary.id })
 
-    return { id, word: data.word, inserted: true }
+    return { id: row.id, word: data.word, inserted: true }
   })
 
 export const removeVocabularyFn = createServerFn({ method: 'POST' })
-  .inputValidator((data) => z.object({ id: z.string().min(1) }).parse(data))
+  .inputValidator((data) => z.object({ id: z.number().int() }).parse(data))
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
