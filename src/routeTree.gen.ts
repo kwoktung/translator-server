@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ProtectedRouteImport } from './routes/_protected'
+import { Route as ImmersiveRouteImport } from './routes/_immersive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WWordRouteImport } from './routes/w.$word'
 import { Route as ApiWordRouteImport } from './routes/api.word'
@@ -17,9 +18,16 @@ import { Route as ApiTtsRouteImport } from './routes/api.tts'
 import { Route as ApiSentenceRouteImport } from './routes/api.sentence'
 import { Route as ProtectedVocabularyRouteImport } from './routes/_protected.vocabulary'
 import { Route as ProtectedTrRouteImport } from './routes/_protected.tr'
+import { Route as ImmersiveWarmupRouteImport } from './routes/_immersive.warmup'
+import { Route as ProtectedVocabularyIndexRouteImport } from './routes/_protected.vocabulary.index'
+import { Route as ProtectedVocabularyImportRouteImport } from './routes/_protected.vocabulary.import'
 
 const ProtectedRoute = ProtectedRouteImport.update({
   id: '/_protected',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImmersiveRoute = ImmersiveRouteImport.update({
+  id: '/_immersive',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -57,69 +65,105 @@ const ProtectedTrRoute = ProtectedTrRouteImport.update({
   path: '/tr',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ImmersiveWarmupRoute = ImmersiveWarmupRouteImport.update({
+  id: '/warmup',
+  path: '/warmup',
+  getParentRoute: () => ImmersiveRoute,
+} as any)
+const ProtectedVocabularyIndexRoute =
+  ProtectedVocabularyIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => ProtectedVocabularyRoute,
+  } as any)
+const ProtectedVocabularyImportRoute =
+  ProtectedVocabularyImportRouteImport.update({
+    id: '/import',
+    path: '/import',
+    getParentRoute: () => ProtectedVocabularyRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/warmup': typeof ImmersiveWarmupRoute
   '/tr': typeof ProtectedTrRoute
-  '/vocabulary': typeof ProtectedVocabularyRoute
+  '/vocabulary': typeof ProtectedVocabularyRouteWithChildren
   '/api/sentence': typeof ApiSentenceRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/word': typeof ApiWordRoute
   '/w/$word': typeof WWordRoute
+  '/vocabulary/import': typeof ProtectedVocabularyImportRoute
+  '/vocabulary/': typeof ProtectedVocabularyIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/warmup': typeof ImmersiveWarmupRoute
   '/tr': typeof ProtectedTrRoute
-  '/vocabulary': typeof ProtectedVocabularyRoute
   '/api/sentence': typeof ApiSentenceRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/word': typeof ApiWordRoute
   '/w/$word': typeof WWordRoute
+  '/vocabulary/import': typeof ProtectedVocabularyImportRoute
+  '/vocabulary': typeof ProtectedVocabularyIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_immersive': typeof ImmersiveRouteWithChildren
   '/_protected': typeof ProtectedRouteWithChildren
+  '/_immersive/warmup': typeof ImmersiveWarmupRoute
   '/_protected/tr': typeof ProtectedTrRoute
-  '/_protected/vocabulary': typeof ProtectedVocabularyRoute
+  '/_protected/vocabulary': typeof ProtectedVocabularyRouteWithChildren
   '/api/sentence': typeof ApiSentenceRoute
   '/api/tts': typeof ApiTtsRoute
   '/api/word': typeof ApiWordRoute
   '/w/$word': typeof WWordRoute
+  '/_protected/vocabulary/import': typeof ProtectedVocabularyImportRoute
+  '/_protected/vocabulary/': typeof ProtectedVocabularyIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/warmup'
     | '/tr'
     | '/vocabulary'
     | '/api/sentence'
     | '/api/tts'
     | '/api/word'
     | '/w/$word'
+    | '/vocabulary/import'
+    | '/vocabulary/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/warmup'
     | '/tr'
-    | '/vocabulary'
     | '/api/sentence'
     | '/api/tts'
     | '/api/word'
     | '/w/$word'
+    | '/vocabulary/import'
+    | '/vocabulary'
   id:
     | '__root__'
     | '/'
+    | '/_immersive'
     | '/_protected'
+    | '/_immersive/warmup'
     | '/_protected/tr'
     | '/_protected/vocabulary'
     | '/api/sentence'
     | '/api/tts'
     | '/api/word'
     | '/w/$word'
+    | '/_protected/vocabulary/import'
+    | '/_protected/vocabulary/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ImmersiveRoute: typeof ImmersiveRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
   ApiSentenceRoute: typeof ApiSentenceRoute
   ApiTtsRoute: typeof ApiTtsRoute
@@ -134,6 +178,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof ProtectedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_immersive': {
+      id: '/_immersive'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ImmersiveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -185,17 +236,63 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedTrRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_immersive/warmup': {
+      id: '/_immersive/warmup'
+      path: '/warmup'
+      fullPath: '/warmup'
+      preLoaderRoute: typeof ImmersiveWarmupRouteImport
+      parentRoute: typeof ImmersiveRoute
+    }
+    '/_protected/vocabulary/': {
+      id: '/_protected/vocabulary/'
+      path: '/'
+      fullPath: '/vocabulary/'
+      preLoaderRoute: typeof ProtectedVocabularyIndexRouteImport
+      parentRoute: typeof ProtectedVocabularyRoute
+    }
+    '/_protected/vocabulary/import': {
+      id: '/_protected/vocabulary/import'
+      path: '/import'
+      fullPath: '/vocabulary/import'
+      preLoaderRoute: typeof ProtectedVocabularyImportRouteImport
+      parentRoute: typeof ProtectedVocabularyRoute
+    }
   }
 }
 
+interface ImmersiveRouteChildren {
+  ImmersiveWarmupRoute: typeof ImmersiveWarmupRoute
+}
+
+const ImmersiveRouteChildren: ImmersiveRouteChildren = {
+  ImmersiveWarmupRoute: ImmersiveWarmupRoute,
+}
+
+const ImmersiveRouteWithChildren = ImmersiveRoute._addFileChildren(
+  ImmersiveRouteChildren,
+)
+
+interface ProtectedVocabularyRouteChildren {
+  ProtectedVocabularyImportRoute: typeof ProtectedVocabularyImportRoute
+  ProtectedVocabularyIndexRoute: typeof ProtectedVocabularyIndexRoute
+}
+
+const ProtectedVocabularyRouteChildren: ProtectedVocabularyRouteChildren = {
+  ProtectedVocabularyImportRoute: ProtectedVocabularyImportRoute,
+  ProtectedVocabularyIndexRoute: ProtectedVocabularyIndexRoute,
+}
+
+const ProtectedVocabularyRouteWithChildren =
+  ProtectedVocabularyRoute._addFileChildren(ProtectedVocabularyRouteChildren)
+
 interface ProtectedRouteChildren {
   ProtectedTrRoute: typeof ProtectedTrRoute
-  ProtectedVocabularyRoute: typeof ProtectedVocabularyRoute
+  ProtectedVocabularyRoute: typeof ProtectedVocabularyRouteWithChildren
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedTrRoute: ProtectedTrRoute,
-  ProtectedVocabularyRoute: ProtectedVocabularyRoute,
+  ProtectedVocabularyRoute: ProtectedVocabularyRouteWithChildren,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
@@ -204,6 +301,7 @@ const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ImmersiveRoute: ImmersiveRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
   ApiSentenceRoute: ApiSentenceRoute,
   ApiTtsRoute: ApiTtsRoute,

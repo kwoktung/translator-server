@@ -5,6 +5,7 @@ import { getDb } from '#/db'
 import { getEnv } from '#/env.server'
 import { vocabulary } from '../../db/schema'
 import { getSessionFn } from '#/actions/get-session'
+import { wordTranslateFn } from '#/actions/translate/word'
 
 async function requireUserId(): Promise<string> {
   const session = await getSessionFn()
@@ -25,38 +26,39 @@ export const listVocabularyFn = createServerFn({ method: 'GET' }).handler(
   },
 )
 
-const addVocabularyInput = z.object({
-  word: z.string().min(1),
-  phonetic: z.string().optional(),
-  meaning: z.string().optional(),
-  mnemonic: z.string().optional(),
-  example: z.string().optional(),
-})
-
-export type AddVocabularyInput = z.infer<typeof addVocabularyInput>
-
 export const addVocabularyFn = createServerFn({ method: 'POST' })
-  .inputValidator((data) => addVocabularyInput.parse(data))
+  .inputValidator((data) => z.object({ word: z.string().min(1) }).parse(data))
   .handler(async ({ data }) => {
     const userId = await requireUserId()
     const db = getDb(getEnv())
+
+    const existing = await db
+      .select({ id: vocabulary.id })
+      .from(vocabulary)
+      .where(and(eq(vocabulary.userId, userId), eq(vocabulary.word, data.word)))
+      .limit(1)
+
+    if (existing.length > 0) {
+      return { id: existing[0].id, word: data.word, inserted: false }
+    }
+
+    const enriched = await wordTranslateFn({
+      data: { word: data.word, source: 'en', target: 'zh' },
+    })
+
     const id = crypto.randomUUID()
+    await db.insert(vocabulary).values({
+      id,
+      userId,
+      word: data.word,
+      phonetic: enriched.phonetic,
+      meaning: enriched.meaning,
+      mnemonic: enriched.mnemonic,
+      example: enriched.example,
+      createdAt: Date.now(),
+    })
 
-    await db
-      .insert(vocabulary)
-      .values({
-        id,
-        userId,
-        word: data.word,
-        phonetic: data.phonetic ?? null,
-        meaning: data.meaning ?? null,
-        mnemonic: data.mnemonic ?? null,
-        example: data.example ?? null,
-        createdAt: Date.now(),
-      })
-      .onConflictDoNothing()
-
-    return { id, word: data.word }
+    return { id, word: data.word, inserted: true }
   })
 
 export const removeVocabularyFn = createServerFn({ method: 'POST' })

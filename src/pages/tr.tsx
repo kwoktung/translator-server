@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { sentenceTranslateFn } from '#/actions/translate/sentence'
-import { wordTranslateFn } from '#/actions/translate/word'
 import { addVocabularyFn } from '#/actions/vocabulary'
 import { speakText } from '#/utils/tts'
 
@@ -63,20 +62,7 @@ export function TranslatePage() {
   })
 
   const { mutate: saveWord, isPending: isSaving } = useMutation({
-    mutationFn: async (word: string) => {
-      const wordResult = await wordTranslateFn({
-        data: { word, source: 'en', target: 'zh' },
-      })
-      return addVocabularyFn({
-        data: {
-          word: wordResult.word,
-          phonetic: wordResult.phonetic,
-          meaning: wordResult.meaning,
-          mnemonic: wordResult.mnemonic,
-          example: wordResult.example,
-        },
-      })
-    },
+    mutationFn: (word: string) => addVocabularyFn({ data: { word } }),
     onSuccess: () => setSaved(true),
   })
 
