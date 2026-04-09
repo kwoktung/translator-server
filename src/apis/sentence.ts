@@ -2,7 +2,7 @@ import { z } from 'zod'
 import {
   sentenceTranslateFn,
   sentenceTranslateInputSchema,
-} from '#/actions/translate-sentence'
+} from '#/actions/translate/sentence'
 
 export const handlers = {
   POST: async ({ request }: { request: Request }) => {
