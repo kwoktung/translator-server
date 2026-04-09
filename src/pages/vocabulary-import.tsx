@@ -17,8 +17,8 @@ const MAX_WORDS = 50
 function parseWords(raw: string): string[] {
   const seen = new Set<string>()
   return raw
-    .split('\n')
-    .map((line) => line.trim())
+    .split(/\s+/)
+    .map((w) => w.trim())
     .filter(Boolean)
     .filter((word) => {
       const key = word.toLowerCase()
@@ -116,7 +116,7 @@ export function VocabularyImportPage() {
             id="word-list"
             value={textarea}
             onChange={(e) => setTextarea(e.target.value)}
-            placeholder={'apple\nbanana\neloquent\npersevere'}
+            placeholder={'apple banana eloquent persevere'}
             rows={10}
             className="w-full resize-none rounded-xl border border-(--line) bg-transparent px-3 py-2 font-mono text-sm text-(--sea-ink) outline-none placeholder:text-(--sea-ink-soft) focus:border-(--lagoon)"
           />
@@ -135,7 +135,7 @@ export function VocabularyImportPage() {
                   )}
                 </>
               ) : (
-                'One word per line'
+                'Separate words by spaces or line breaks'
               )}
             </p>
             <button
