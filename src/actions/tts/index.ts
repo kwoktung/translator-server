@@ -11,7 +11,7 @@ export type TTSInput = z.infer<typeof ttsInputSchema>
 export const ttsFn = createServerOnlyFn(
   async (text: string): Promise<ReadableStream> => {
     const env = getEnv()
-    const result = await env.AI.run('@cf/deepgram/aura-2-es', { text })
+    const result = await env.AI.run('@cf/deepgram/aura-2-en', { text })
     return result as unknown as ReadableStream
   },
 )
