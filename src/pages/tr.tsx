@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { sentenceTranslateFn } from '#/actions/translate/sentence'
 import { addVocabularyFn } from '#/actions/vocabulary'
-import { speakText } from '#/utils/tts'
+import { useAudioPlay } from '#/hooks/use-audio-play'
 
 type Lang = 'en' | 'zh'
 
@@ -10,26 +10,23 @@ const LANG_LABEL: Record<Lang, string> = { en: 'English', zh: 'Chinese' }
 const LANG_SHORT: Record<Lang, string> = { en: 'EN', zh: 'ZH' }
 
 function SpeakButton({ text, disabled }: { text: string; disabled?: boolean }) {
-  const [playing, setPlaying] = useState(false)
+  const { loading, playing, play } = useAudioPlay()
 
-  async function handleClick() {
-    if (playing || !text) return
-    setPlaying(true)
-    try {
-      await speakText(text)
-    } finally {
-      setPlaying(false)
-    }
+  function handleClick() {
+    if (loading || playing || !text) return
+    play(`/audio/w/${encodeURIComponent(text)}`)
   }
+
+  const isActive = loading || playing
 
   return (
     <button
       onClick={handleClick}
-      disabled={disabled || playing || !text}
+      disabled={disabled || isActive || !text}
       title="Listen"
       className="flex h-8 w-8 items-center justify-center rounded-full text-(--sea-ink-soft) transition hover:bg-[var(--link-bg-hover)] hover:text-[var(--lagoon-deep)] disabled:opacity-30"
     >
-      {playing ? (
+      {isActive ? (
         <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
           <rect x="6" y="5" width="4" height="14" rx="1" />
           <rect x="14" y="5" width="4" height="14" rx="1" />

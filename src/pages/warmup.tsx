@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { listVocabularyFn } from '#/actions/vocabulary'
-import { speakText } from '#/utils/tts'
+import { useAudioPlay } from '#/hooks/use-audio-play'
 import type { VocabularyEntry } from '#/db/schema'
 
 function shuffle<T>(arr: T[]): T[] {
@@ -16,8 +16,11 @@ function shuffle<T>(arr: T[]): T[] {
 
 export function VocabularyWarmupPage() {
   const { data: words = [], isLoading } = useQuery({
-    queryKey: ['vocabulary'],
-    queryFn: () => listVocabularyFn(),
+    queryKey: ['vocabulary', 'warmup'],
+    queryFn: async () => {
+      const result = await listVocabularyFn({ data: { limit: 1000 } })
+      return result.items
+    },
   })
 
   const [sessionKey, setSessionKey] = useState(0)
@@ -48,7 +51,8 @@ export function VocabularyWarmupPage() {
     if (!isDragging) return
     const dy = dragY
     setIsDragging(false)
-    if (dy < -80) {
+    // if (dy < -80) {
+    if (dy < -40) {
       setIsExiting(true)
       setTimeout(() => {
         setCurrentIndex((i) => i + 1)
@@ -120,18 +124,27 @@ export function VocabularyWarmupPage() {
         <>
           {currentIndex + 1 < shuffled.length && (
             <div
-              className="absolute inset-0 p-4 sm:p-6"
+              className="absolute inset-0 p-4 sm:p-12"
               style={{
-                transform: `translateY(${12 * (1 - dragProgress)}px) scale(${0.95 + dragProgress * 0.05})`,
+                transform: isExiting
+                  ? 'translateY(0px) scale(1)'
+                  : `translateY(${12 * (1 - dragProgress)}px) scale(${0.95 + dragProgress * 0.05})`,
                 transformOrigin: 'top center',
                 transition: isDragging ? 'none' : 'transform 0.3s ease',
+                opacity: isExiting ? 1 : 0.6,
+                pointerEvents: 'none',
               }}
             >
-              <div className="island-shell h-full rounded-3xl opacity-50" />
+              <WordCard
+                entry={shuffled[currentIndex + 1]}
+                revealed={false}
+                onReveal={() => {}}
+              />
             </div>
           )}
 
           <div
+            key={currentIndex}
             className="absolute inset-0 select-none p-4 sm:p-12"
             style={{
               transform: isExiting
@@ -141,6 +154,7 @@ export function VocabularyWarmupPage() {
                 ? 'none'
                 : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               cursor: isDragging ? 'grabbing' : 'grab',
+              zIndex: 1,
             }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
@@ -168,16 +182,51 @@ function WordCard({
   revealed: boolean
   onReveal: () => void
 }) {
-  const revealContent = entry.example || entry.meaning
-  const hasReveal = Boolean(revealContent)
+  const hasReveal = Boolean(entry.meaning || entry.example)
+  const { loading, playing, play } = useAudioPlay()
+  const isActive = loading || playing
+
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const titleStartPos = useRef({ x: 0, y: 0 })
+
+  function cancelLongPress() {
+    if (longPressTimer.current !== null) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
+  }
+
+  function handleTitlePointerDown(e: React.PointerEvent<HTMLHeadingElement>) {
+    e.stopPropagation()
+    titleStartPos.current = { x: e.clientX, y: e.clientY }
+    longPressTimer.current = setTimeout(() => {
+      longPressTimer.current = null
+      navigator.clipboard.writeText(entry.word)
+    }, 500)
+  }
+
+  function handleTitlePointerMove(e: React.PointerEvent<HTMLHeadingElement>) {
+    e.stopPropagation()
+    const dx = e.clientX - titleStartPos.current.x
+    const dy = e.clientY - titleStartPos.current.y
+    if (Math.hypot(dx, dy) > 10) cancelLongPress()
+  }
+
+  function handleTitlePointerUp(e: React.PointerEvent<HTMLHeadingElement>) {
+    e.stopPropagation()
+    cancelLongPress()
+  }
 
   return (
-    <div
-      className="island-shell flex h-full flex-col rounded-3xl p-8"
-      onClick={!revealed && hasReveal ? onReveal : undefined}
-    >
+    <div className="island-shell flex h-full flex-col rounded-3xl p-8">
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        <h1 className="display-title break-words text-center text-5xl font-bold text-(--sea-ink) sm:text-6xl">
+        <h1
+          className="display-title wrap-break-word text-center text-5xl font-bold text-(--sea-ink) sm:text-6xl"
+          onPointerDown={handleTitlePointerDown}
+          onPointerMove={handleTitlePointerMove}
+          onPointerUp={handleTitlePointerUp}
+          onPointerCancel={handleTitlePointerUp}
+        >
           {entry.word}
         </h1>
         <div className="flex items-center gap-3">
@@ -189,27 +238,57 @@ function WordCard({
           <button
             onClick={(e) => {
               e.stopPropagation()
-              speakText(entry.word).catch(() => {})
+              if (!isActive) play(`/audio/w/${encodeURIComponent(entry.word)}`)
             }}
+            disabled={isActive}
             title="Listen"
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--lagoon)] text-white shadow-sm transition hover:bg-[var(--lagoon-deep)]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--lagoon)] text-white shadow-sm transition hover:bg-[var(--lagoon-deep)] disabled:opacity-70"
           >
-            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
-            </svg>
+            {isActive ? (
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                width="16"
+                height="16"
+              >
+                <rect x="6" y="5" width="4" height="14" rx="1" />
+                <rect x="14" y="5" width="4" height="14" rx="1" />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                width="16"
+                height="16"
+              >
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+            )}
           </button>
         </div>
       </div>
 
       <div className="my-2 h-px w-full bg-[var(--line)]" />
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-4">
+      <div
+        className="flex flex-1 flex-col items-center justify-center gap-4"
+        onClick={!revealed && hasReveal ? onReveal : undefined}
+      >
         {!hasReveal ? (
           <span className="text-sm opacity-40 text-(--sea-ink-soft)">—</span>
         ) : revealed ? (
-          <p className="max-w-sm text-center text-lg leading-relaxed text-(--sea-ink) rise-in">
-            {revealContent}
-          </p>
+          <div className="flex max-w-sm flex-col items-center gap-3 rise-in">
+            {entry.meaning && (
+              <p className="text-center text-lg leading-relaxed text-(--sea-ink)">
+                {entry.meaning}
+              </p>
+            )}
+            {entry.example && (
+              <p className="text-center text-sm leading-relaxed italic text-(--sea-ink-soft)">
+                {entry.example}
+              </p>
+            )}
+          </div>
         ) : (
           <button className="rounded-xl border border-[var(--line)] px-6 py-3 text-sm text-(--sea-ink-soft)">
             tap to reveal
