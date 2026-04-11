@@ -148,13 +148,13 @@ function VocabularyContent() {
                 <th className="border-b border-(--line) px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft)">
                   Word
                 </th>
-                <th className="border-b border-(--line) px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft)">
+                <th className="hidden border-b border-(--line) px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft) sm:table-cell">
                   Phonetic
                 </th>
                 <th className="border-b border-(--line) px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-(--sea-ink-soft)">
                   Meaning
                 </th>
-                <th className="border-b border-(--line) px-3 py-2" />
+                <th className="hidden border-b border-(--line) px-3 py-2 sm:table-cell" />
               </tr>
             </thead>
             <tbody>
@@ -196,7 +196,7 @@ function WordRow({
       <td className="px-3 py-2 align-middle font-bold text-(--sea-ink)">
         {entry.word}
       </td>
-      <td className="px-3 py-2 align-middle">
+      <td className="hidden px-3 py-2 align-middle sm:table-cell">
         {entry.phonetic && (
           <div className="flex items-center gap-1.5">
             <span className="text-(--sea-ink-soft)">{entry.phonetic}</span>
@@ -233,7 +233,7 @@ function WordRow({
       <td className="px-3 py-2 align-middle text-(--sea-ink)">
         {entry.meaning}
       </td>
-      <td className="px-3 py-2 align-middle text-right whitespace-nowrap">
+      <td className="hidden px-3 py-2 align-middle text-right whitespace-nowrap sm:table-cell">
         <button
           onClick={() => dialogRef.current?.showModal()}
           title="Remove"
