@@ -1,5 +1,5 @@
 import { createServerFn } from '@tanstack/react-start'
-import { and, eq, gt, like } from 'drizzle-orm'
+import { and, eq, gt, like, desc } from 'drizzle-orm'
 import { z } from 'zod'
 import { getDb } from '#/db'
 import { getEnv } from '#/env.server'
@@ -44,7 +44,7 @@ export const listVocabularyFn = createServerFn({ method: 'GET' })
       .select()
       .from(vocabulary)
       .where(and(...conditions))
-      .orderBy(vocabulary.id)
+      .orderBy(desc(vocabulary.id))
       .limit(data.limit + 1)
 
     const hasMore = rows.length > data.limit
