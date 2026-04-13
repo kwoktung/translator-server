@@ -9,12 +9,17 @@ async function makeCacheKey(namespace: string, key: string): Promise<Request> {
   return new Request(`https://cache.internal/${namespace}/${hash}`)
 }
 
-export async function withJsonCache<T>(
-  namespace: string,
-  key: string,
-  fn: () => Promise<T>,
-  ttl: number,
-): Promise<T> {
+export async function withJsonCache<T>({
+  namespace,
+  key,
+  fn,
+  ttl,
+}: {
+  namespace: string
+  key: string
+  fn: () => Promise<T>
+  ttl: number
+}): Promise<T> {
   const cache = caches.default
   const cacheKey = await makeCacheKey(namespace, key)
 
@@ -36,13 +41,19 @@ export async function withJsonCache<T>(
   return data
 }
 
-export async function withBinaryCache(
-  namespace: string,
-  key: string,
-  fn: () => Promise<ReadableStream>,
-  ttl: number,
-  contentType: string,
-): Promise<ReadableStream> {
+export async function withBinaryCache({
+  namespace,
+  key,
+  fn,
+  ttl,
+  contentType,
+}: {
+  namespace: string
+  key: string
+  fn: () => Promise<ReadableStream>
+  ttl: number
+  contentType: string
+}): Promise<ReadableStream> {
   const cache = caches.default
   const cacheKey = await makeCacheKey(namespace, key)
 

@@ -20,10 +20,10 @@ export const getSessionFn = createServerFn({ method: 'GET' })
     const request = getRequest()
     const cookie = request.headers.get('cookie') ?? ''
 
-    return withJsonCache<Session | null>(
-      'session',
-      cookie,
-      async () => {
+    return withJsonCache<Session | null>({
+      namespace: 'session',
+      key: cookie,
+      fn: async () => {
         const response = await fetch(
           `${import.meta.env.VITE_AUTH_BASE_URL}/api/auth/get-session`,
           { headers: { cookie } },
@@ -31,6 +31,6 @@ export const getSessionFn = createServerFn({ method: 'GET' })
         if (!response.ok) return null
         return response.json()
       },
-      60,
-    )
+      ttl: 60,
+    })
   })

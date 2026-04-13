@@ -15,16 +15,16 @@ export const ttsFn = createServerFn({ method: 'POST' })
   .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }): Promise<ReadableStream> => {
     const env = getEnv()
-    return withBinaryCache(
-      'tts',
-      data.text,
-      async () => {
+    return withBinaryCache({
+      namespace: 'tts',
+      key: data.text,
+      fn: async () => {
         const result = await env.AI.run('@cf/deepgram/aura-2-en', {
           text: data.text,
         })
         return result as unknown as ReadableStream
       },
-      604800,
-      'audio/mpeg',
-    )
+      ttl: 604800,
+      contentType: 'audio/mpeg',
+    })
   })

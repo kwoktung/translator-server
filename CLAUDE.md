@@ -8,6 +8,18 @@ This project is deployed to **Cloudflare Workers** using Wrangler (`wrangler.jso
 - **No Node.js built-ins by default** — `nodejs_compat` flag is enabled, so most Node APIs work, but avoid anything that relies on the filesystem or native modules.
 - **Runtime is the V8 isolate**, not Node.js — keep server-side code edge-compatible.
 
+# Function Parameters
+
+Prefer object params over positional params for functions with more than one parameter.
+
+```ts
+// good
+function withJsonCache<T>({ namespace, key, fn, ttl }: { ... }): Promise<T>
+
+// avoid
+function withJsonCache<T>(namespace: string, key: string, fn: () => Promise<T>, ttl: number): Promise<T>
+```
+
 # File Naming
 
 Use kebab-case for all file names (e.g. `theme-script.tsx`, not `ThemeScript.tsx`).
