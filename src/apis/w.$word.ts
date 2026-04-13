@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { wordTranslateFn } from '#/actions/translate/word'
+import { translateWord } from '#/actions/translate/word'
 import { createApiRoute, zValidator } from '#/utils/api-handler.server'
 import { isEnglishWord } from '#/utils/patterns'
 
@@ -11,9 +11,7 @@ export const handlers = {
       if (!isEnglishWord(word)) {
         return c.json({ error: `"${word}" is not a valid English word` }, 400)
       }
-      const result = await wordTranslateFn({
-        data: { word, source: 'en', target: 'zh' },
-      })
+      const result = await translateWord({ word, source: 'en', target: 'zh' })
       return c.json(result)
     },
   ),

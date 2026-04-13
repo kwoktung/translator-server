@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { ttsFn } from '#/actions/tts'
+import { generateTts } from '#/actions/tts'
 import { createApiRoute, zValidator } from '#/utils/api-handler.server'
 import { isEnglishWord } from '#/utils/patterns'
 
@@ -11,7 +11,7 @@ export const handlers = {
       if (!isEnglishWord(text)) {
         return c.json({ error: `"${text}" is not a valid English word` }, 400)
       }
-      const stream = await ttsFn({ data: { text } })
+      const stream = await generateTts(text)
       return new Response(stream, { headers: { 'Content-Type': 'audio/mpeg' } })
     },
   ),

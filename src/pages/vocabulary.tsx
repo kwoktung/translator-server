@@ -5,7 +5,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { listVocabularyFn, removeVocabularyFn } from '#/actions/vocabulary'
+import { client, json } from '#/utils/api-client'
 import { useAudioPlay } from '#/hooks/use-audio-play'
 import { useDebounce } from '#/hooks/use-debounce'
 import type { VocabularyEntry } from '../db/schema'
@@ -69,13 +69,12 @@ function VocabularyContent() {
   const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } =
     useInfiniteQuery({
       queryKey: ['vocabulary', debouncedPrefix],
-      queryFn: ({ pageParam }) =>
-        listVocabularyFn({
-          data: {
-            prefix: debouncedPrefix || undefined,
-            cursor: pageParam ?? undefined,
-          },
-        }),
+      queryFn: ({ pageParam }) => {
+        const query: Record<string, string> = {}
+        if (debouncedPrefix) query.prefix = debouncedPrefix
+        if (pageParam != null) query.cursor = String(pageParam)
+        return json(client.api.vocabulary.$get({ query }))
+      },
       initialPageParam: null as number | null,
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     })
@@ -83,7 +82,8 @@ function VocabularyContent() {
   const words = data?.pages.flatMap((p) => p.items) ?? []
 
   const { mutate: removeWord } = useMutation({
-    mutationFn: (id: number) => removeVocabularyFn({ data: { id } }),
+    mutationFn: (id: number) =>
+      json(client.api.vocabulary[':id'].$delete({ param: { id: String(id) } })),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vocabulary'] })
     },

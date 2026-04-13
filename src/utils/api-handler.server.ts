@@ -1,8 +1,12 @@
-import { ZodError, type ZodType, z } from 'zod'
+import { ZodError, z } from 'zod'
+import type { ZodType } from 'zod'
 import { UnauthorizedError } from '#/utils/errors'
 
 type ValidatorTarget = 'json' | 'param' | 'query'
-type TanStackHandler = (ctx: { request: Request; params?: unknown }) => Promise<Response>
+type TanStackHandler = (ctx: {
+  request: Request
+  params?: unknown
+}) => Promise<Response>
 
 // Opaque middleware descriptor — mirrors what zValidator() returns in Hono
 export interface ValidatorMiddleware<T extends ValidatorTarget, S> {
@@ -13,14 +17,17 @@ export interface ValidatorMiddleware<T extends ValidatorTarget, S> {
 
 // Context object — Hono-style c
 type ApiContext<
-  TValidated extends Partial<Record<ValidatorTarget, unknown>> = Record<never, never>,
+  TValidated extends Partial<Record<ValidatorTarget, unknown>> = Record<
+    never,
+    never
+  >,
 > = {
   req: {
     raw: Request
-    valid<K extends keyof TValidated>(target: K): TValidated[K]
+    valid: <K extends keyof TValidated>(target: K) => TValidated[K]
   }
-  json<T>(data: T, status?: number): Response
-  text(text: string, status?: number): Response
+  json: <T>(data: T, status?: number) => Response
+  text: (text: string, status?: number) => Response
 }
 
 function toErrorResponse(error: unknown): Response {
@@ -39,7 +46,10 @@ export function zValidator<T extends ValidatorTarget, S extends ZodType>(
   target: T,
   schema: S,
 ): ValidatorMiddleware<T, z.infer<S>> {
-  return { _tag: 'validator', target, schema } as ValidatorMiddleware<T, z.infer<S>>
+  return { _tag: 'validator', target, schema } as ValidatorMiddleware<
+    T,
+    z.infer<S>
+  >
 }
 
 // ── createApiRoute ────────────────────────────────────────────────────────────
@@ -62,7 +72,9 @@ export function createApiRoute<
 >(
   v1: ValidatorMiddleware<T1, S1>,
   v2: ValidatorMiddleware<T2, S2>,
-  handler: (c: ApiContext<{ [K in T1]: S1 } & { [K in T2]: S2 }>) => Promise<Response>,
+  handler: (
+    c: ApiContext<{ [K in T1]: S1 } & { [K in T2]: S2 }>,
+  ) => Promise<Response>,
 ): TanStackHandler
 
 // Implementation
@@ -70,7 +82,10 @@ export function createApiRoute(...args: unknown[]): TanStackHandler {
   const handler = args.at(-1) as (
     c: ApiContext<Record<string, unknown>>,
   ) => Promise<Response>
-  const validators = args.slice(0, -1) as ValidatorMiddleware<ValidatorTarget, unknown>[]
+  const validators = args.slice(0, -1) as ValidatorMiddleware<
+    ValidatorTarget,
+    unknown
+  >[]
 
   return async ({ request, params }) => {
     try {
@@ -86,7 +101,10 @@ export function createApiRoute(...args: unknown[]): TanStackHandler {
 
         const result = v.schema.safeParse(raw)
         if (!result.success) {
-          return Response.json({ error: z.treeifyError(result.error) }, { status: 400 })
+          return Response.json(
+            { error: z.treeifyError(result.error) },
+            { status: 400 },
+          )
         }
         validated[v.target] = result.data
       }

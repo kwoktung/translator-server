@@ -1,10 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  createApiKeyFn,
-  deleteApiKeyFn,
-  listApiKeysFn,
-} from '#/actions/api-keys'
+import { client, json } from '#/utils/api-client'
 import type { ApiKeyItem } from '#/actions/api-keys'
 
 export function ApiKeysPage() {
@@ -13,11 +9,12 @@ export function ApiKeysPage() {
 
   const { data: keys, isLoading } = useQuery({
     queryKey: ['api-keys'],
-    queryFn: () => listApiKeysFn(),
+    queryFn: () => json(client.api['api-keys'].$get()),
   })
 
   const { mutate: createKey, isPending: isCreating } = useMutation({
-    mutationFn: (name: string) => createApiKeyFn({ data: { name } }),
+    mutationFn: (name: string) =>
+      json(client.api['api-keys'].$post({ json: { name } })),
     onSuccess: () => {
       setNameInput('')
       void queryClient.invalidateQueries({ queryKey: ['api-keys'] })
@@ -25,7 +22,10 @@ export function ApiKeysPage() {
   })
 
   const { mutate: deleteKey } = useMutation({
-    mutationFn: (id: number) => deleteApiKeyFn({ data: { id } }),
+    mutationFn: (id: number) =>
+      json(
+        client.api['api-keys'][':id'].$delete({ param: { id: String(id) } }),
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['api-keys'] })
     },

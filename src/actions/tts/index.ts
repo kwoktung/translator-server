@@ -1,8 +1,7 @@
-import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 import { getEnv } from '#/env.server'
-import { serverFnErrorMiddleware } from '#/middlewares/server-fn-error'
 import { withBinaryCache } from '#/utils/cache.server'
+import { createServerOnlyFn } from '@tanstack/react-start'
 
 export const ttsInputSchema = z.object({
   text: z.string().min(1).max(500),
@@ -10,21 +9,18 @@ export const ttsInputSchema = z.object({
 
 export type TTSInput = z.infer<typeof ttsInputSchema>
 
-export const ttsFn = createServerFn({ method: 'POST' })
-  .inputValidator((data) => ttsInputSchema.parse(data))
-  .middleware([serverFnErrorMiddleware])
-  .handler(async ({ data }): Promise<ReadableStream> => {
+export const generateTts = createServerOnlyFn(
+  async (text: string): Promise<ReadableStream> => {
     const env = getEnv()
     return withBinaryCache({
       namespace: 'tts',
-      key: data.text,
+      key: text,
       fn: async () => {
-        const result = await env.AI.run('@cf/deepgram/aura-2-en', {
-          text: data.text,
-        })
+        const result = await env.AI.run('@cf/deepgram/aura-2-en', { text })
         return result as unknown as ReadableStream
       },
       ttl: 604800,
       contentType: 'audio/mpeg',
     })
-  })
+  },
+)

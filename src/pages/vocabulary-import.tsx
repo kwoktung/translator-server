@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { addVocabularyFn } from '#/actions/vocabulary'
+import { client, json } from '#/utils/api-client'
 
 type WordStatus = 'pending' | 'processing' | 'done' | 'skipped' | 'error'
 
@@ -57,7 +57,9 @@ export function VocabularyImportPage() {
         ),
       )
       try {
-        const result = await addVocabularyFn({ data: { word } })
+        const result = await json(
+          client.api.vocabulary.$post({ json: { word } }),
+        )
         setItems((prev) =>
           prev.map((item, i) =>
             i === idx
@@ -101,7 +103,7 @@ export function VocabularyImportPage() {
       ),
     )
     try {
-      const result = await addVocabularyFn({ data: { word } })
+      const result = await json(client.api.vocabulary.$post({ json: { word } }))
       setItems((prev) =>
         prev.map((item, i) =>
           i === idx

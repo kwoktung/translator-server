@@ -22,6 +22,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply translator-db --remote"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-query": "latest",
@@ -34,6 +35,7 @@
     "ai": "^6.0.149",
     "better-auth": "^1.6.0",
     "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.12",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.545.0",
     "mustache": "^4.2.0",

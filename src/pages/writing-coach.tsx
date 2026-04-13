@@ -1,11 +1,7 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  deleteWritingTurnFn,
-  getWritingFeedbackFn,
-  listWritingTurnsFn,
-} from '#/actions/writing-coach'
 import type { WritingFeedback } from '#/actions/writing-coach'
+import { client, json } from '#/utils/api-client'
 
 const MAX_CHARS = 2000
 
@@ -16,12 +12,12 @@ export function WritingCoachPage() {
 
   const { data: history, isLoading: historyLoading } = useQuery({
     queryKey: ['writing-turns'],
-    queryFn: () => listWritingTurnsFn(),
+    queryFn: () => json(client.api['writing-coach'].turns.$get()),
   })
 
   const { mutate, isPending } = useMutation({
     mutationFn: (input: string) =>
-      getWritingFeedbackFn({ data: { text: input } }),
+      json(client.api['writing-coach'].turns.$post({ json: { text: input } })),
     onSuccess: (data) => {
       setResult(data)
       setText('')
@@ -177,7 +173,12 @@ function HistorySection({
   const visible = history.filter((t) => t.id !== currentId)
 
   const { mutate: deleteTurn } = useMutation({
-    mutationFn: (id: number) => deleteWritingTurnFn({ data: { id } }),
+    mutationFn: (id: number) =>
+      json(
+        client.api['writing-coach'].turns[':id'].$delete({
+          param: { id: String(id) },
+        }),
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['writing-turns'] })
     },

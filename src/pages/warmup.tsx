@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { listVocabularyFn } from '#/actions/vocabulary'
+import { client, json } from '#/utils/api-client'
 import { useAudioPlay } from '#/hooks/use-audio-play'
 import type { VocabularyEntry } from '#/db/schema'
 
@@ -18,8 +18,10 @@ export function VocabularyWarmupPage() {
   const { data: words = [], isLoading } = useQuery({
     queryKey: ['vocabulary', 'warmup'],
     queryFn: async () => {
-      const result = await listVocabularyFn({ data: { limit: 1000 } })
-      return result.items
+      const data = await json(
+        client.api.vocabulary.$get({ query: { limit: '1000' } }),
+      )
+      return data.items
     },
   })
 

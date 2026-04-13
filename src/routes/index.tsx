@@ -1,10 +1,10 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
-import { getSessionFn } from '#/actions/get-session'
+import { getSession } from '#/utils/get-session'
 import { HomePage } from '#/pages/home'
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
-    const session = await getSessionFn()
+    const session = await getSession()
     if (session) throw redirect({ to: '/tr' })
   },
   component: HomePage,
