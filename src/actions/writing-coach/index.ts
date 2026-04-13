@@ -17,6 +17,33 @@ export interface WritingFeedback {
   createdAt: number
 }
 
+export async function createWritingTurn({
+  userId,
+  text,
+}: {
+  userId: string
+  text: string
+}): Promise<WritingFeedback> {
+  const env = getEnv()
+  const workersai = createWorkersAI({ binding: env.AI })
+  const model = workersai('@cf/moonshotai/kimi-k2.5')
+  const { revised, suggestions } = await getWritingFeedback(model, { text })
+
+  const createdAt = Date.now()
+  const [row] = await getDb(env)
+    .insert(writingTurns)
+    .values({
+      userId,
+      original: text,
+      revised,
+      suggestions: JSON.stringify(suggestions),
+      createdAt,
+    })
+    .returning({ id: writingTurns.id })
+
+  return { id: row.id, original: text, revised, suggestions, createdAt }
+}
+
 export const getWritingFeedbackFn = createServerFn<
   'POST',
   { text: string },
@@ -28,28 +55,7 @@ export const getWritingFeedbackFn = createServerFn<
   .middleware([serverFnErrorMiddleware])
   .handler(async ({ data }) => {
     const userId = await requireUserId()
-    const env = getEnv()
-    const workersai = createWorkersAI({ binding: env.AI })
-    const model = workersai('@cf/moonshotai/kimi-k2.5')
-
-    const { revised, suggestions } = await getWritingFeedback(model, {
-      text: data.text,
-    })
-
-    const createdAt = Date.now()
-
-    const [row] = await getDb(env)
-      .insert(writingTurns)
-      .values({
-        userId,
-        original: data.text,
-        revised,
-        suggestions: JSON.stringify(suggestions),
-        createdAt,
-      })
-      .returning({ id: writingTurns.id })
-
-    return { id: row.id, original: data.text, revised, suggestions, createdAt }
+    return createWritingTurn({ userId, text: data.text })
   })
 
 export const deleteWritingTurnFn = createServerFn<'POST', { id: number }, void>(

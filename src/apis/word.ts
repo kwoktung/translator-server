@@ -1,22 +1,15 @@
-import { z } from 'zod'
 import {
   wordTranslateFn,
   wordTranslateInputSchema,
 } from '#/actions/translate/word'
+import { createApiRoute, zValidator } from '#/utils/api-handler.server'
 
 export const handlers = {
-  POST: async ({ request }: { request: Request }) => {
-    const body = await request.json()
-    const parsed = wordTranslateInputSchema.safeParse(body)
-
-    if (!parsed.success) {
-      return Response.json(
-        { error: z.treeifyError(parsed.error) },
-        { status: 400 },
-      )
-    }
-
-    const result = await wordTranslateFn({ data: parsed.data })
-    return Response.json(result)
-  },
+  POST: createApiRoute(
+    zValidator('json', wordTranslateInputSchema),
+    async (c) => {
+      const result = await wordTranslateFn({ data: c.req.valid('json') })
+      return c.json(result)
+    },
+  ),
 }

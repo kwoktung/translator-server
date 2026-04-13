@@ -7,6 +7,15 @@ import { apiKeys } from '#/db/schema'
 import { serverFnErrorMiddleware } from '#/middlewares/server-fn-error'
 import { requireUserId } from '#/utils/require-user-id'
 
+export async function getUserIdByApiKey(token: string): Promise<string | null> {
+  const rows = await getDb(getEnv())
+    .select({ userId: apiKeys.userId })
+    .from(apiKeys)
+    .where(eq(apiKeys.key, token))
+    .limit(1)
+  return rows[0]?.userId ?? null
+}
+
 function generateApiKey(): string {
   return 'wc_' + crypto.randomUUID().replace(/-/g, '')
 }
