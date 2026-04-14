@@ -1,12 +1,6 @@
 import type { MiddlewareHandler } from 'hono'
 import { getSession } from '#/utils/get-session'
 
-export type HonoContext = {
-  Variables: {
-    userId: string
-  }
-}
-
 export const authMiddleware: MiddlewareHandler<HonoContext> = async (
   c,
   next,

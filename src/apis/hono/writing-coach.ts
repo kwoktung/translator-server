@@ -7,9 +7,8 @@ import {
   deleteWritingTurn,
   listWritingTurns,
 } from '#/actions/writing-coach'
-import { requireUserId } from '#/utils/require-user-id'
 
-const app = new Hono()
+const app = new Hono<HonoContext>()
   // POST / — external API key auth
   .post(
     '/',
@@ -30,15 +29,14 @@ const app = new Hono()
   )
   // GET /turns — session auth
   .get('/turns', async (c) => {
-    const userId = await requireUserId()
-    return c.json(await listWritingTurns({ userId }))
+    return c.json(await listWritingTurns({ userId: c.get('userId') }))
   })
   // POST /turns — session auth
   .post(
     '/turns',
     zValidator('json', z.object({ text: z.string().min(1).max(2000) })),
     async (c) => {
-      const userId = await requireUserId()
+      const userId = c.get('userId')
       return c.json(
         await createWritingTurn({ userId, text: c.req.valid('json').text }),
       )
@@ -49,7 +47,7 @@ const app = new Hono()
     '/turns/:id',
     zValidator('param', z.object({ id: z.coerce.number().int() })),
     async (c) => {
-      const userId = await requireUserId()
+      const userId = c.get('userId')
       await deleteWritingTurn({ userId, id: c.req.valid('param').id })
       return c.json({ success: true as const })
     },
