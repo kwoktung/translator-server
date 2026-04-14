@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { Hono } from 'hono'
+import { bearerAuth } from 'hono/bearer-auth'
 import { zValidator } from '@hono/zod-validator'
 import { getUserIdByApiKey } from '#/actions/api-keys'
 import {
@@ -12,18 +13,21 @@ const app = new Hono<HonoContext>()
   // POST / — external API key auth
   .post(
     '/',
+    bearerAuth({
+      verifyToken: async (token, c) => {
+        const userId = await getUserIdByApiKey(token)
+        if (!userId) return false
+        c.set('userId', userId)
+        return true
+      },
+    }),
     zValidator('json', z.object({ text: z.string().min(1).max(2000) })),
     async (c) => {
-      const authHeader = c.req.header('Authorization') ?? ''
-      const match = /^Bearer\s+(.+)$/.exec(authHeader)
-      if (!match)
-        return c.json({ error: 'Missing or invalid Authorization header' }, 401)
-
-      const userId = await getUserIdByApiKey(match[1])
-      if (!userId) return c.json({ error: 'Invalid API key' }, 401)
-
       return c.json(
-        await createWritingTurn({ userId, text: c.req.valid('json').text }),
+        await createWritingTurn({
+          userId: c.get('userId'),
+          text: c.req.valid('json').text,
+        }),
       )
     },
   )
