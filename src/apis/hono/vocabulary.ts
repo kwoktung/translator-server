@@ -6,9 +6,8 @@ import {
   listVocabulary,
   removeVocabulary,
 } from '#/actions/vocabulary'
-import { requireUserId } from '#/utils/require-user-id'
 
-const app = new Hono()
+const app = new Hono<HonoContext>()
   .get(
     '/',
     zValidator(
@@ -20,7 +19,7 @@ const app = new Hono()
       }),
     ),
     async (c) => {
-      const userId = await requireUserId()
+      const userId = c.get('userId')
       return c.json(await listVocabulary({ userId, ...c.req.valid('query') }))
     },
   )
@@ -28,7 +27,7 @@ const app = new Hono()
     '/',
     zValidator('json', z.object({ word: z.string().min(1) })),
     async (c) => {
-      const userId = await requireUserId()
+      const userId = c.get('userId')
       return c.json(
         await addVocabulary({ userId, word: c.req.valid('json').word }),
       )
@@ -38,7 +37,7 @@ const app = new Hono()
     '/:id',
     zValidator('param', z.object({ id: z.coerce.number().int() })),
     async (c) => {
-      const userId = await requireUserId()
+      const userId = c.get('userId')
       return c.json(
         await removeVocabulary({ userId, id: c.req.valid('param').id }),
       )
