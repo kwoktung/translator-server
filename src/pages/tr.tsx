@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { sentenceTranslateFn } from '#/actions/translate/sentence'
-import { addVocabularyFn } from '#/actions/vocabulary'
+import { client, json } from '#/utils/api-client'
 import { useAudioPlay } from '#/hooks/use-audio-play'
 
 type Lang = 'en' | 'zh'
@@ -55,11 +54,16 @@ export function TranslatePage() {
     reset,
   } = useMutation({
     mutationFn: ({ text, src, tgt }: { text: string; src: Lang; tgt: Lang }) =>
-      sentenceTranslateFn({ data: { text, source: src, target: tgt } }),
+      json(
+        client.api.translate.sentence.$post({
+          json: { text, source: src, target: tgt },
+        }),
+      ),
   })
 
   const { mutate: saveWord, isPending: isSaving } = useMutation({
-    mutationFn: (word: string) => addVocabularyFn({ data: { word } }),
+    mutationFn: (word: string) =>
+      json(client.api.vocabulary.$post({ json: { word } })),
     onSuccess: () => setSaved(true),
   })
 

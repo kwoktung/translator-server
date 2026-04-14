@@ -13,9 +13,7 @@ import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as ImmersiveRouteImport } from './routes/_immersive'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WWordRouteImport } from './routes/w.$word'
-import { Route as ApiWritingCoachRouteImport } from './routes/api.writing-coach'
-import { Route as ApiWordRouteImport } from './routes/api.word'
-import { Route as ApiSentenceRouteImport } from './routes/api.sentence'
+import { Route as ApiSplatRouteImport } from './routes/api.$'
 import { Route as ProtectedWritingCoachRouteImport } from './routes/_protected.writing-coach'
 import { Route as ProtectedVocabularyRouteImport } from './routes/_protected.vocabulary'
 import { Route as ProtectedTrRouteImport } from './routes/_protected.tr'
@@ -43,19 +41,9 @@ const WWordRoute = WWordRouteImport.update({
   path: '/w/$word',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiWritingCoachRoute = ApiWritingCoachRouteImport.update({
-  id: '/api/writing-coach',
-  path: '/api/writing-coach',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWordRoute = ApiWordRouteImport.update({
-  id: '/api/word',
-  path: '/api/word',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSentenceRoute = ApiSentenceRouteImport.update({
-  id: '/api/sentence',
-  path: '/api/sentence',
+const ApiSplatRoute = ApiSplatRouteImport.update({
+  id: '/api/$',
+  path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProtectedWritingCoachRoute = ProtectedWritingCoachRouteImport.update({
@@ -108,9 +96,7 @@ export interface FileRoutesByFullPath {
   '/tr': typeof ProtectedTrRoute
   '/vocabulary': typeof ProtectedVocabularyRouteWithChildren
   '/writing-coach': typeof ProtectedWritingCoachRoute
-  '/api/sentence': typeof ApiSentenceRoute
-  '/api/word': typeof ApiWordRoute
-  '/api/writing-coach': typeof ApiWritingCoachRoute
+  '/api/$': typeof ApiSplatRoute
   '/w/$word': typeof WWordRoute
   '/vocabulary/import': typeof ProtectedVocabularyImportRoute
   '/audio/w/$word': typeof AudioWWordRoute
@@ -122,9 +108,7 @@ export interface FileRoutesByTo {
   '/api-keys': typeof ProtectedApiKeysRoute
   '/tr': typeof ProtectedTrRoute
   '/writing-coach': typeof ProtectedWritingCoachRoute
-  '/api/sentence': typeof ApiSentenceRoute
-  '/api/word': typeof ApiWordRoute
-  '/api/writing-coach': typeof ApiWritingCoachRoute
+  '/api/$': typeof ApiSplatRoute
   '/w/$word': typeof WWordRoute
   '/vocabulary/import': typeof ProtectedVocabularyImportRoute
   '/audio/w/$word': typeof AudioWWordRoute
@@ -140,9 +124,7 @@ export interface FileRoutesById {
   '/_protected/tr': typeof ProtectedTrRoute
   '/_protected/vocabulary': typeof ProtectedVocabularyRouteWithChildren
   '/_protected/writing-coach': typeof ProtectedWritingCoachRoute
-  '/api/sentence': typeof ApiSentenceRoute
-  '/api/word': typeof ApiWordRoute
-  '/api/writing-coach': typeof ApiWritingCoachRoute
+  '/api/$': typeof ApiSplatRoute
   '/w/$word': typeof WWordRoute
   '/_protected/vocabulary/import': typeof ProtectedVocabularyImportRoute
   '/audio/w/$word': typeof AudioWWordRoute
@@ -157,9 +139,7 @@ export interface FileRouteTypes {
     | '/tr'
     | '/vocabulary'
     | '/writing-coach'
-    | '/api/sentence'
-    | '/api/word'
-    | '/api/writing-coach'
+    | '/api/$'
     | '/w/$word'
     | '/vocabulary/import'
     | '/audio/w/$word'
@@ -171,9 +151,7 @@ export interface FileRouteTypes {
     | '/api-keys'
     | '/tr'
     | '/writing-coach'
-    | '/api/sentence'
-    | '/api/word'
-    | '/api/writing-coach'
+    | '/api/$'
     | '/w/$word'
     | '/vocabulary/import'
     | '/audio/w/$word'
@@ -188,9 +166,7 @@ export interface FileRouteTypes {
     | '/_protected/tr'
     | '/_protected/vocabulary'
     | '/_protected/writing-coach'
-    | '/api/sentence'
-    | '/api/word'
-    | '/api/writing-coach'
+    | '/api/$'
     | '/w/$word'
     | '/_protected/vocabulary/import'
     | '/audio/w/$word'
@@ -201,9 +177,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ImmersiveRoute: typeof ImmersiveRouteWithChildren
   ProtectedRoute: typeof ProtectedRouteWithChildren
-  ApiSentenceRoute: typeof ApiSentenceRoute
-  ApiWordRoute: typeof ApiWordRoute
-  ApiWritingCoachRoute: typeof ApiWritingCoachRoute
+  ApiSplatRoute: typeof ApiSplatRoute
   WWordRoute: typeof WWordRoute
   AudioWWordRoute: typeof AudioWWordRoute
 }
@@ -238,25 +212,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WWordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/writing-coach': {
-      id: '/api/writing-coach'
-      path: '/api/writing-coach'
-      fullPath: '/api/writing-coach'
-      preLoaderRoute: typeof ApiWritingCoachRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/word': {
-      id: '/api/word'
-      path: '/api/word'
-      fullPath: '/api/word'
-      preLoaderRoute: typeof ApiWordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/sentence': {
-      id: '/api/sentence'
-      path: '/api/sentence'
-      fullPath: '/api/sentence'
-      preLoaderRoute: typeof ApiSentenceRouteImport
+    '/api/$': {
+      id: '/api/$'
+      path: '/api/$'
+      fullPath: '/api/$'
+      preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_protected/writing-coach': {
@@ -365,9 +325,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ImmersiveRoute: ImmersiveRouteWithChildren,
   ProtectedRoute: ProtectedRouteWithChildren,
-  ApiSentenceRoute: ApiSentenceRoute,
-  ApiWordRoute: ApiWordRoute,
-  ApiWritingCoachRoute: ApiWritingCoachRoute,
+  ApiSplatRoute: ApiSplatRoute,
   WWordRoute: WWordRoute,
   AudioWWordRoute: AudioWWordRoute,
 }

@@ -1,9 +1,9 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
-import { getSessionFn } from '#/actions/get-session'
+import { getSession } from '@/utils/get-session'
 
 export const Route = createFileRoute('/_immersive')({
   beforeLoad: async () => {
-    const session = await getSessionFn()
+    const session = await getSession()
     if (!session) throw redirect({ to: '/' })
   },
   component: () => (
