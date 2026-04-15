@@ -32,9 +32,22 @@ const app = new Hono<HonoContext>()
     },
   )
   // GET /turns — session auth
-  .get('/turns', async (c) => {
-    return c.json(await listWritingTurns({ userId: c.get('userId') }))
-  })
+  .get(
+    '/turns',
+    zValidator(
+      'query',
+      z.object({
+        cursor: z.coerce.number().int().optional(),
+        limit: z.coerce.number().int().min(1).max(100).optional(),
+      }),
+    ),
+    async (c) => {
+      const { cursor, limit } = c.req.valid('query')
+      return c.json(
+        await listWritingTurns({ userId: c.get('userId'), cursor, limit }),
+      )
+    },
+  )
   // POST /turns — session auth
   .post(
     '/turns',
