@@ -1,5 +1,9 @@
 import { useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import type { WritingFeedback } from '#/actions/writing-coach'
 import { client, json } from '#/utils/api-client'
 
@@ -10,10 +14,24 @@ export function WritingCoachPage() {
   const [result, setResult] = useState<WritingFeedback | null>(null)
   const queryClient = useQueryClient()
 
-  const { data: history, isLoading: historyLoading } = useQuery({
+  const {
+    data: historyData,
+    isLoading: historyLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['writing-turns'],
-    queryFn: () => json(client.api['writing-coach'].turns.$get()),
+    queryFn: ({ pageParam }) => {
+      const query: Record<string, string> = {}
+      if (pageParam != null) query.cursor = String(pageParam)
+      return json(client.api['writing-coach'].turns.$get({ query }))
+    },
+    initialPageParam: null as number | null,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   })
+
+  const history = historyData?.pages.flatMap((p) => p.items) ?? []
 
   const { mutate, isPending } = useMutation({
     mutationFn: (input: string) =>
@@ -52,9 +70,12 @@ export function WritingCoachPage() {
       )}
 
       <HistorySection
-        history={history ?? []}
+        history={history}
         isLoading={historyLoading}
         currentId={result?.id}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={() => fetchNextPage()}
       />
     </main>
   )
@@ -164,10 +185,16 @@ function HistorySection({
   history,
   isLoading,
   currentId,
+  hasNextPage,
+  isFetchingNextPage,
+  onLoadMore,
 }: {
   history: WritingFeedback[]
   isLoading: boolean
   currentId?: number
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
+  onLoadMore?: () => void
 }) {
   const queryClient = useQueryClient()
   const visible = history.filter((t) => t.id !== currentId)
@@ -195,6 +222,15 @@ function HistorySection({
           <HistoryItem key={turn.id} turn={turn} onDelete={deleteTurn} />
         ))}
       </div>
+      {hasNextPage && (
+        <button
+          onClick={onLoadMore}
+          disabled={isFetchingNextPage}
+          className="mt-3 w-full rounded-xl island-shell px-4 py-2 text-sm text-(--sea-ink-soft) transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {isFetchingNextPage ? 'Loading…' : 'Load more'}
+        </button>
+      )}
     </section>
   )
 }

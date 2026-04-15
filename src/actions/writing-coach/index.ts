@@ -1,5 +1,5 @@
 import { createServerOnlyFn } from '@tanstack/react-start'
-import { and, desc, eq } from 'drizzle-orm'
+import { and, desc, eq, lt } from 'drizzle-orm'
 import { createWorkersAI } from 'workers-ai-provider'
 import { getDb } from '#/db'
 import { getEnv } from '#/env.server'
@@ -43,18 +43,43 @@ export const createWritingTurn = createServerOnlyFn(
   },
 )
 
+export interface ListWritingTurnsResult {
+  items: WritingFeedback[]
+  nextCursor: number | null
+}
+
+const LIST_WRITING_TURNS_DEFAULT_LIMIT = 20
+
 export const listWritingTurns = createServerOnlyFn(
-  async ({ userId }: { userId: string }): Promise<WritingFeedback[]> => {
+  async ({
+    userId,
+    cursor,
+    limit = LIST_WRITING_TURNS_DEFAULT_LIMIT,
+  }: {
+    userId: string
+    cursor?: number
+    limit?: number
+  }): Promise<ListWritingTurnsResult> => {
+    const conditions = [eq(writingTurns.userId, userId)]
+    if (cursor !== undefined)
+      conditions.push(lt(writingTurns.createdAt, cursor))
+
     const rows = await getDb(getEnv())
       .select()
       .from(writingTurns)
-      .where(eq(writingTurns.userId, userId))
+      .where(and(...conditions))
       .orderBy(desc(writingTurns.createdAt))
-      .limit(20)
-    return rows.map((row) => ({
-      ...row,
-      suggestions: JSON.parse(row.suggestions) as string[],
-    }))
+      .limit(limit + 1)
+
+    const hasMore = rows.length > limit
+    const items = hasMore ? rows.slice(0, limit) : rows
+    return {
+      items: items.map((row) => ({
+        ...row,
+        suggestions: JSON.parse(row.suggestions) as string[],
+      })),
+      nextCursor: hasMore ? items[items.length - 1].createdAt : null,
+    }
   },
 )
 
