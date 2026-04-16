@@ -7,6 +7,7 @@ import {
   createWritingTurn,
   deleteWritingTurn,
   listWritingTurns,
+  previewWritingFeedback,
 } from '#/actions/writing-coach'
 
 const app = new Hono<HonoContext>()
@@ -31,6 +32,16 @@ const app = new Hono<HonoContext>()
       )
     },
   )
+  // POST /preview — session auth, LLM only (no DB save)
+  .post(
+    '/preview',
+    zValidator('json', z.object({ text: z.string().min(1).max(2000) })),
+    async (c) => {
+      return c.json(
+        await previewWritingFeedback({ text: c.req.valid('json').text }),
+      )
+    },
+  )
   // GET /turns — session auth
   .get(
     '/turns',
@@ -39,12 +50,18 @@ const app = new Hono<HonoContext>()
       z.object({
         cursor: z.coerce.number().int().optional(),
         limit: z.coerce.number().int().min(1).max(100).optional(),
+        from: z.coerce.number().int().optional(),
       }),
     ),
     async (c) => {
-      const { cursor, limit } = c.req.valid('query')
+      const { cursor, limit, from } = c.req.valid('query')
       return c.json(
-        await listWritingTurns({ userId: c.get('userId'), cursor, limit }),
+        await listWritingTurns({
+          userId: c.get('userId'),
+          cursor,
+          limit,
+          from,
+        }),
       )
     },
   )
