@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { WritingCoachPage } from '#/pages/writing-coach'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_protected/writing-coach')({
-  component: WritingCoachPage,
+  component: () => <Outlet />,
 })

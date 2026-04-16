@@ -1,10 +1,15 @@
 import { createServerOnlyFn } from '@tanstack/react-start'
-import { and, desc, eq, lt } from 'drizzle-orm'
+import { and, desc, eq, gte, lt } from 'drizzle-orm'
 import { createWorkersAI } from 'workers-ai-provider'
 import { getDb } from '#/db'
 import { getEnv } from '#/env.server'
 import { writingTurns } from '#/db/schema'
 import { getWritingFeedback } from '#/utils/llm/writing-coach'
+
+export interface PreviewFeedback {
+  revised: string
+  suggestions: string[]
+}
 
 export interface WritingFeedback {
   id: number
@@ -13,6 +18,15 @@ export interface WritingFeedback {
   suggestions: string[]
   createdAt: number
 }
+
+export const previewWritingFeedback = createServerOnlyFn(
+  async ({ text }: { text: string }): Promise<PreviewFeedback> => {
+    const env = getEnv()
+    const workersai = createWorkersAI({ binding: env.AI })
+    const model = workersai('@cf/moonshotai/kimi-k2.5')
+    return getWritingFeedback(model, { text })
+  },
+)
 
 export const createWritingTurn = createServerOnlyFn(
   async ({
@@ -55,12 +69,15 @@ export const listWritingTurns = createServerOnlyFn(
     userId,
     cursor,
     limit = LIST_WRITING_TURNS_DEFAULT_LIMIT,
+    from,
   }: {
     userId: string
     cursor?: number
     limit?: number
+    from?: number
   }): Promise<ListWritingTurnsResult> => {
     const conditions = [eq(writingTurns.userId, userId)]
+    if (from !== undefined) conditions.push(gte(writingTurns.createdAt, from))
     if (cursor !== undefined)
       conditions.push(lt(writingTurns.createdAt, cursor))
 
