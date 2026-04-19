@@ -27,4 +27,8 @@
       "enabled": true,
     },
   },
+  "vars": {
+    "ANTHROPIC_BASE_URL": "",
+    "ANTHROPIC_API_KEY": "",
+  },
 }

@@ -1,13 +1,30 @@
+import { z } from 'zod'
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
-import {
-  translateSentence,
-  sentenceTranslateInputSchema,
-} from '#/actions/translate/sentence'
-import {
-  translateWord,
-  wordTranslateInputSchema,
-} from '#/actions/translate/word'
+import { translateSentence } from '#/actions/translate/sentence'
+import { translateWord } from '#/actions/translate/word'
+
+const wordTranslateInputSchema = z
+  .object({
+    word: z.string().min(1),
+    source: z.enum(['zh', 'en']),
+    target: z.enum(['zh', 'en']),
+  })
+  .refine((data) => data.source !== data.target, {
+    message: 'source and target languages must be different',
+    path: ['target'],
+  })
+
+const sentenceTranslateInputSchema = z
+  .object({
+    text: z.string().min(1),
+    source: z.enum(['zh', 'en']),
+    target: z.enum(['zh', 'en']),
+  })
+  .refine((data) => data.source !== data.target, {
+    message: 'source and target languages must be different',
+    path: ['target'],
+  })
 
 const app = new Hono()
   .post('/word', zValidator('json', wordTranslateInputSchema), async (c) => {

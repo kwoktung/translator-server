@@ -1,13 +1,6 @@
-import { z } from 'zod'
 import { getEnv } from '#/env.server'
 import { withBinaryCache } from '#/utils/cache.server'
 import { createServerOnlyFn } from '@tanstack/react-start'
-
-export const ttsInputSchema = z.object({
-  text: z.string().min(1).max(500),
-})
-
-export type TTSInput = z.infer<typeof ttsInputSchema>
 
 export const generateTts = createServerOnlyFn(
   async (text: string): Promise<ReadableStream> => {
