@@ -22,6 +22,7 @@
     "db:migrate:remote": "wrangler d1 migrations apply translator-db --remote"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.71",
     "@hono/zod-validator": "^0.7.6",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",

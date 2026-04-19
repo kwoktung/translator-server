@@ -14,3 +14,4 @@ todos.json
 .prod.vars
 .env.production
 tsconfig.tsbuildinfo
+.dev.vars

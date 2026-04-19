@@ -1,8 +1,8 @@
 import { createServerOnlyFn } from '@tanstack/react-start'
 import { and, desc, eq, gte, lt } from 'drizzle-orm'
-import { createWorkersAI } from 'workers-ai-provider'
 import { getDb } from '#/db'
 import { getEnv } from '#/env.server'
+import { getModelFor } from '#/utils/ai.server'
 import { writingTurns } from '#/db/schema'
 import { getWritingFeedback } from '#/utils/llm/writing-coach'
 
@@ -21,9 +21,7 @@ export interface WritingFeedback {
 
 export const previewWritingFeedback = createServerOnlyFn(
   async ({ text }: { text: string }): Promise<PreviewFeedback> => {
-    const env = getEnv()
-    const workersai = createWorkersAI({ binding: env.AI })
-    const model = workersai('@cf/moonshotai/kimi-k2.5')
+    const model = getModelFor('writingCoach')
     return getWritingFeedback(model, { text })
   },
 )
@@ -36,13 +34,11 @@ export const createWritingTurn = createServerOnlyFn(
     userId: string
     text: string
   }): Promise<WritingFeedback> => {
-    const env = getEnv()
-    const workersai = createWorkersAI({ binding: env.AI })
-    const model = workersai('@cf/moonshotai/kimi-k2.5')
+    const model = getModelFor('writingCoach')
     const { revised, suggestions } = await getWritingFeedback(model, { text })
 
     const createdAt = Date.now()
-    const [row] = await getDb(env)
+    const [row] = await getDb(getEnv())
       .insert(writingTurns)
       .values({
         userId,

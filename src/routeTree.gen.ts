@@ -22,6 +22,7 @@ import { Route as ImmersiveWarmupRouteImport } from './routes/_immersive.warmup'
 import { Route as ProtectedWritingCoachIndexRouteImport } from './routes/_protected.writing-coach.index'
 import { Route as ProtectedVocabularyIndexRouteImport } from './routes/_protected.vocabulary.index'
 import { Route as AudioWWordRouteImport } from './routes/audio.w.$word'
+import { Route as AudioPPhraseRouteImport } from './routes/audio.p.$phrase'
 import { Route as ProtectedWritingCoachHistoryRouteImport } from './routes/_protected.writing-coach.history'
 import { Route as ProtectedVocabularyImportRouteImport } from './routes/_protected.vocabulary.import'
 
@@ -90,6 +91,11 @@ const AudioWWordRoute = AudioWWordRouteImport.update({
   path: '/audio/w/$word',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AudioPPhraseRoute = AudioPPhraseRouteImport.update({
+  id: '/audio/p/$phrase',
+  path: '/audio/p/$phrase',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProtectedWritingCoachHistoryRoute =
   ProtectedWritingCoachHistoryRouteImport.update({
     id: '/history',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/w/$word': typeof WWordRoute
   '/vocabulary/import': typeof ProtectedVocabularyImportRoute
   '/writing-coach/history': typeof ProtectedWritingCoachHistoryRoute
+  '/audio/p/$phrase': typeof AudioPPhraseRoute
   '/audio/w/$word': typeof AudioWWordRoute
   '/vocabulary/': typeof ProtectedVocabularyIndexRoute
   '/writing-coach/': typeof ProtectedWritingCoachIndexRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/w/$word': typeof WWordRoute
   '/vocabulary/import': typeof ProtectedVocabularyImportRoute
   '/writing-coach/history': typeof ProtectedWritingCoachHistoryRoute
+  '/audio/p/$phrase': typeof AudioPPhraseRoute
   '/audio/w/$word': typeof AudioWWordRoute
   '/vocabulary': typeof ProtectedVocabularyIndexRoute
   '/writing-coach': typeof ProtectedWritingCoachIndexRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/w/$word': typeof WWordRoute
   '/_protected/vocabulary/import': typeof ProtectedVocabularyImportRoute
   '/_protected/writing-coach/history': typeof ProtectedWritingCoachHistoryRoute
+  '/audio/p/$phrase': typeof AudioPPhraseRoute
   '/audio/w/$word': typeof AudioWWordRoute
   '/_protected/vocabulary/': typeof ProtectedVocabularyIndexRoute
   '/_protected/writing-coach/': typeof ProtectedWritingCoachIndexRoute
@@ -162,6 +171,7 @@ export interface FileRouteTypes {
     | '/w/$word'
     | '/vocabulary/import'
     | '/writing-coach/history'
+    | '/audio/p/$phrase'
     | '/audio/w/$word'
     | '/vocabulary/'
     | '/writing-coach/'
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/w/$word'
     | '/vocabulary/import'
     | '/writing-coach/history'
+    | '/audio/p/$phrase'
     | '/audio/w/$word'
     | '/vocabulary'
     | '/writing-coach'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/w/$word'
     | '/_protected/vocabulary/import'
     | '/_protected/writing-coach/history'
+    | '/audio/p/$phrase'
     | '/audio/w/$word'
     | '/_protected/vocabulary/'
     | '/_protected/writing-coach/'
@@ -203,6 +215,7 @@ export interface RootRouteChildren {
   ProtectedRoute: typeof ProtectedRouteWithChildren
   ApiSplatRoute: typeof ApiSplatRoute
   WWordRoute: typeof WWordRoute
+  AudioPPhraseRoute: typeof AudioPPhraseRoute
   AudioWWordRoute: typeof AudioWWordRoute
 }
 
@@ -299,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AudioWWordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audio/p/$phrase': {
+      id: '/audio/p/$phrase'
+      path: '/audio/p/$phrase'
+      fullPath: '/audio/p/$phrase'
+      preLoaderRoute: typeof AudioPPhraseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_protected/writing-coach/history': {
       id: '/_protected/writing-coach/history'
       path: '/history'
@@ -380,6 +400,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProtectedRoute: ProtectedRouteWithChildren,
   ApiSplatRoute: ApiSplatRoute,
   WWordRoute: WWordRoute,
+  AudioPPhraseRoute: AudioPPhraseRoute,
   AudioWWordRoute: AudioWWordRoute,
 }
 export const routeTree = rootRouteImport

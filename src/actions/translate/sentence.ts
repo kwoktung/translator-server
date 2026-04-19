@@ -1,24 +1,13 @@
 import { createServerOnlyFn } from '@tanstack/react-start'
-import { createWorkersAI } from 'workers-ai-provider'
-import { z } from 'zod'
-import { getEnv } from '#/env.server'
+import { getModelFor } from '#/utils/ai.server'
 import { translateText } from '#/utils/llm/translate'
 import { LANG_MAP } from '#/actions/translate/common'
 
-export const sentenceTranslateInputSchema = z
-  .object({
-    text: z.string().min(1),
-    source: z.enum(['zh', 'en']),
-    target: z.enum(['zh', 'en']),
-  })
-  .refine((data) => data.source !== data.target, {
-    message: 'source and target languages must be different',
-    path: ['target'],
-  })
-
-export type SentenceTranslateInput = z.infer<
-  typeof sentenceTranslateInputSchema
->
+export interface SentenceTranslateInput {
+  text: string
+  source: 'zh' | 'en'
+  target: 'zh' | 'en'
+}
 
 export interface SentenceTranslateResult {
   translatedText: string
@@ -26,9 +15,7 @@ export interface SentenceTranslateResult {
 
 export const translateSentence = createServerOnlyFn(
   async (data: SentenceTranslateInput): Promise<SentenceTranslateResult> => {
-    const env = getEnv()
-    const workersai = createWorkersAI({ binding: env.AI })
-    const model = workersai('@cf/meta/llama-3.1-8b-instruct')
+    const model = getModelFor('translate')
     const translatedText = await translateText(model, {
       text: data.text,
       sourceLang: LANG_MAP[data.source],

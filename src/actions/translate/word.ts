@@ -1,25 +1,13 @@
 import { createServerOnlyFn } from '@tanstack/react-start'
-import { createWorkersAI } from 'workers-ai-provider'
-import { z } from 'zod'
-import { getEnv } from '#/env.server'
-import { getExample } from '#/utils/llm/example'
-import { getMeaning } from '#/utils/llm/meaning'
-import { getMnemonic } from '#/utils/llm/mnemonic'
-import { getPhonetic } from '#/utils/llm/phonetic'
+import { getModelFor } from '#/utils/ai.server'
+import { getWordAnalysis } from '#/utils/llm/word-analysis'
 import { LANG_MAP } from '#/actions/translate/common'
 
-export const wordTranslateInputSchema = z
-  .object({
-    word: z.string().min(1),
-    source: z.enum(['zh', 'en']),
-    target: z.enum(['zh', 'en']),
-  })
-  .refine((data) => data.source !== data.target, {
-    message: 'source and target languages must be different',
-    path: ['target'],
-  })
-
-export type WordTranslateInput = z.infer<typeof wordTranslateInputSchema>
+export interface WordTranslateInput {
+  word: string
+  source: 'zh' | 'en'
+  target: 'zh' | 'en'
+}
 
 export interface WordTranslateResult {
   word: string
@@ -31,17 +19,17 @@ export interface WordTranslateResult {
 
 export const translateWord = createServerOnlyFn(
   async (data: WordTranslateInput): Promise<WordTranslateResult> => {
-    const env = getEnv()
-    const workersai = createWorkersAI({ binding: env.AI })
-    const model = workersai('@cf/meta/llama-3.1-8b-instruct')
+    const model = getModelFor('translate')
     const sourceLang = LANG_MAP[data.source]
     const targetLang = LANG_MAP[data.target]
-    const [meaning, phonetic, example, mnemonic] = await Promise.all([
-      getMeaning(model, { word: data.word, sourceLang, targetLang }),
-      getPhonetic(model, { word: data.word }),
-      getExample(model, { word: data.word, sourceLang }),
-      getMnemonic(model, { word: data.word, sourceLang }),
-    ])
+    const { meaning, phonetic, example, mnemonic } = await getWordAnalysis(
+      model,
+      {
+        word: data.word,
+        sourceLang,
+        targetLang,
+      },
+    )
     return { word: data.word, meaning, phonetic, example, mnemonic }
   },
 )
