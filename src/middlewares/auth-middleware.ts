@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from 'hono'
-import { getSession } from '#/utils/get-session'
+import { fetchSessionWithCookies } from '#/utils/get-session/fetch-session.server'
 
 type WhitelistEntry = { path: string | RegExp; method: string }
 
@@ -25,7 +25,13 @@ export function createAuthMiddleware({
 } = {}): MiddlewareHandler<HonoContext> {
   return async (c, next) => {
     if (matchesWhitelist(c.req.path, c.req.method, whitelist)) return next()
-    const session = await getSession()
+
+    const cookie = c.req.header('cookie') ?? ''
+    const { session, setCookies } = await fetchSessionWithCookies(cookie)
+
+    for (const sc of setCookies) {
+      c.header('Set-Cookie', sc, { append: true })
+    }
 
     if (!session?.user?.id) return c.json({ error: 'Unauthorized' }, 401)
     c.set('userId', session.user.id)

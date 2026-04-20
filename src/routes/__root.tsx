@@ -1,4 +1,9 @@
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
+import {
+  HeadContent,
+  Scripts,
+  createRootRouteWithContext,
+} from '@tanstack/react-router'
+import type { QueryClient } from '@tanstack/react-query'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
@@ -18,42 +23,44 @@ function NotFound() {
   )
 }
 
-export const Route = createRootRoute({
-  notFoundComponent: NotFound,
-  head: () => ({
-    meta: [
-      {
-        charSet: 'utf-8',
-      },
-      {
-        name: 'viewport',
-        content: 'width=device-width, initial-scale=1',
-      },
-      {
-        title: 'Translator',
-      },
-      {
-        name: 'theme-color',
-        content: '#000000',
-      },
-    ],
-    links: [
-      {
-        rel: 'stylesheet',
-        href: appCss,
-      },
-      {
-        rel: 'icon',
-        href: '/favicon.ico',
-      },
-      {
-        rel: 'manifest',
-        href: '/manifest.json',
-      },
-    ],
-  }),
-  shellComponent: RootDocument,
-})
+export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
+  {
+    notFoundComponent: NotFound,
+    head: () => ({
+      meta: [
+        {
+          charSet: 'utf-8',
+        },
+        {
+          name: 'viewport',
+          content: 'width=device-width, initial-scale=1',
+        },
+        {
+          title: 'Translator',
+        },
+        {
+          name: 'theme-color',
+          content: '#000000',
+        },
+      ],
+      links: [
+        {
+          rel: 'stylesheet',
+          href: appCss,
+        },
+        {
+          rel: 'icon',
+          href: '/favicon.ico',
+        },
+        {
+          rel: 'manifest',
+          href: '/manifest.json',
+        },
+      ],
+    }),
+    shellComponent: RootDocument,
+  },
+)
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
