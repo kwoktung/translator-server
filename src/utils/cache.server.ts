@@ -1,4 +1,7 @@
-async function makeCacheKey(namespace: string, key: string): Promise<Request> {
+export async function makeCacheKey(
+  namespace: string,
+  key: string,
+): Promise<Request> {
   const buf = await crypto.subtle.digest(
     'SHA-256',
     new TextEncoder().encode(key),
